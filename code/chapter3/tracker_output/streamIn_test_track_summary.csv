@@ -1,0 +1,3 @@
+track_id,sensor_lane,n_points,start_time,end_time,start_devSort,end_devSort,duration_s,avg_speed_mps,mean_geomPeak,scene_hint,confidence
+1,1,8,1704067200000,1704067204000,1,8,4.0,15.576,150.3,unknown,0.8442
+2,2,8,1704067200600,1704067204100,1,8,3.5,15.576,147.05,unknown,0.8303

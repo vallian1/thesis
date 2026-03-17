@@ -1,0 +1,2201 @@
+\documentclass{xdupgthesis}
+
+% XDUTS核心配置
+\xdusetup{
+  style = {
+    customize-los = false,
+    customize-loa = false,
+  },
+  info = {
+    graduate-type         = 硕士,
+    degree-type           = 专业,
+    % 核心必填信息
+    title                 = {面向单向双车道高速的多地磁传感器车辆目标跟踪方法研究},
+    title*                = {Vehicle Target Tracking Using Multiple Geomagnetic Sensors on Unidirectional Two-Lane Highways},
+    author                = {侯照莹},
+    author*               = {Zhiyong Yu},
+    department            = {通信工程学院},
+    major                 = {信息与通信工程},
+    major*                = {Information and Communication Engineering},
+    sub-major             = {通信计算融合与场景应用},
+    student-id            = {23011210459},
+    supervisor            = {毛国强},
+    supervisor*           = {Guoqiang Mao},
+    supv-title            = {教授},
+    supv-title*           = {Professor},
+    supervisor-enterprise = {},
+    supervisor-enterprise*= {},
+    supv-ent              = {},
+    supv-ent*             = {},
+    supv-ent-title        = {},
+    supv-ent-title*       = {},
+    supervisor-title      = {教授},
+    supervisor-title*     = {Lecturer},
+    supervisor-enterprise-title  = {},
+    supervisor-enterprise-title* = {},
+    % 学科与保密信息
+    domain                = {新一代电子信息技术（含量子技术等）},
+    clc                   = {TP391.41},
+    secret-level          = {公开},
+    submit-date           = {2026-03-01},
+    % 关键词
+    keywords              = {, },
+    keywords*             = {Eye Movement Event Detection, Deep Learning, Multi-Modal Fusion, Mamba Network, Time-Frequency Analysis},
+    % 附件与声明文件
+    abstract              = {chapters/abstract-zh.tex},
+    abstract*             = {chapters/abstract-en.tex},
+    acknowledgements      = {chapters/acknowledgements.tex},
+    bio                   = {chapters/biography.tex},
+    appendix              = {chapters/appendix1.tex},
+    statement-scan        = {},
+    statement-sign        = {},
+    los                   = {chapters/los.tex},
+    loa                   = {chapters/loa.tex},
+    % 参考文献
+    bib-resource          = {references.bib},
+  }
+}
+
+% -------------------------
+% 常用包（按功能分组）
+% -------------------------
+\usepackage{graphicx}
+\graphicspath{{images/}}
+
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{amssymb}
+
+\usepackage{booktabs}
+\usepackage{multirow}
+\usepackage{makecell}
+\usepackage{tabularx}
+\usepackage{threeparttable}
+
+\usepackage{subcaption}
+
+\usepackage{xcolor}
+\usepackage{pifont}
+
+\usepackage{enumitem}
+
+% 浮动体控制（你已在用：建议保留）
+\usepackage[section]{placeins} % 提供 \FloatBarrier，并阻止浮动体跨 section
+\usepackage{flafter}          % 防止浮动体出现在源码位置之前
+
+% 超链接与智能引用：hyperref 必须在 cleveref 前面
+\usepackage{hyperref}
+\usepackage{cleveref}
+
+% -------------------------
+% 全局宏：模型名（你原本就有）
+% -------------------------
+\newcommand{\ModelTF}{GazeFusion}
+\newcommand{\ModelMM}{GazeGuide}
+
+% -------------------------
+% 全局宏：地磁章节统一口径（按你第2章需要）
+% -------------------------
+\newcommand{\Fs}{\ensuremath{50\,\mathrm{Hz}}}
+\newcommand{\MagUnit}{\ensuremath{\mathrm{nT}}}
+\newcommand{\SmoothLen}{\ensuremath{7}}        % L_s
+\newcommand{\BgWinPts}{\ensuremath{500}}       % N_0 (10 s @ 50 Hz)
+\newcommand{\ProbFloor}{\ensuremath{10^{-6}}}  % p_min
+
+% 兜底：即使 placeins 被注释掉，也不至于 \FloatBarrier 报错
+\providecommand{\FloatBarrier}{}
+
+% -------------------------
+% 文档开始
+% -------------------------
+\begin{document}
+
+
+\chapter{绪论}
+
+\section{研究背景与意义}
+
+近年来，随着跨区域人员流动日益频繁和公路货运需求持续增长，高速公路在综合交通运输体系中的支撑作用不断增强。交通运输部数据显示，截至2024年末我国高速公路里程已达19.07万公里[1]，路网规模的持续扩展也使高速公路运行管理由单纯保障通行，逐步转为面向安全、效率与韧性的精细化治理。尤其在高速场景下，车辆运行速度高、交通流密度大、扰动传播快，局部异常往往会迅速影响车道乃至路段整体运行状态。因此，如何构建实现面向高速路段的持续感知与精细管理能力，已成为保障路网安全高效运行、提升运行韧性并支撑主动交通管理的重要基础问题。
+
+在此背景下，智能交通系统（ITS）通过交通检测与监视、通信与信息处理等技术实现对交通状态的实时感知与服务支撑，从而为交通管理与控制提供数据基础[2]。基于此，交通治理也正由以流量、平均速度等宏观统计指标为主逐步转向车道级运行机理与驾驶行为的微观刻画。相应地，能够连续描述车辆时空运动过程的轨迹数据成为交通分析、预测与控制的关键数据形态[3]，并可用于拥堵成因诊断、行驶安全风险与冲突指标计算、以及车路协同控制策略评估等任务。车辆目标跟踪的任务，是将路侧传感器输出的离散检测结果或事件序列在时间轴上进行一致性组织与身份维护，形成可持续更新、可用于实时管理与控制的车辆轨迹；同时在车道级应用中尽量保持位置与速度估计的连续性，为上层行为分析提供可靠输入，以支撑车道级速度估计、时距演化分析与变道行为识别等应用。需要指出的是，车辆目标跟踪的实施高度依赖路侧感知载体的观测能力与工程可用性：例如，摄像头具备直观的目标可分辨性，但在强逆光、夜间、雨雾等条件下检测质量易波动；激光雷达空间分辨率高，但设备成本与维护成本较高，且在降雨、降雪等天气下点云质量可能受影响；毫米波雷达对光照不敏感、对恶劣天气相对更稳健，但在密集交通与强多径环境中仍可能出现量测不稳定、目标分离能力受限等问题。因而，对于高速公路这类大范围、全天候、长期运行的应用场景而言，仅依赖高成本或对环境敏感的传感器难以兼顾规模化部署与稳定输出，亟需探索更具性价比且适合长期布设的感知方案，并在算法层面把有限观测转化为可用的连续轨迹数据。
+
+在面向大范围、全天候部署的路侧感知体系中，地磁传感器因成本较低、体积小、安装灵活且对光照与气象条件不敏感，被认为是面向低成本规模化部署的关键候选方案，其基本机理是车辆等铁磁体通过时会扰动局部地球静磁场，传感器对磁场变化进行采样与特征提取，从而输出车辆通过事件及相关磁特征[5]。不同于能够直接给出连续轨迹的感知方式，地磁系统在多传感器组网条件下输出的是跨位置的离散事件流，这些事件需要在时间轴上对齐，并在多车并行与变道交互条件下完成跨点匹配与身份维护，才能转化为可用于微观分析的连续轨迹。然而在实际部署中，传感器噪声、时间戳抖动与系统偏差，以及环境变化等因素会使观测误差呈现非均匀特性；若处理不当，容易造成估计偏差累积并削弱跟踪结果的稳定性与准确性，进而影响基于轨迹的行为推断与管理控制决策。进一步地，漏检、虚警、遮挡以及目标交互会显著放大关联歧义，使轨迹更易出现断裂、身份切换与误关联等失效模式，从而降低轨迹数据的可用性与可信度[4][8, 9]。因此，研究面向多地磁事件流的在线多目标跟踪方法，在不完美观测条件下输出连续且身份一致的车辆轨迹，是释放地磁传感在高速运行监测中应用价值的关键技术支撑，并对轨迹级安全评估与精细化交通管理具有现实意义。
+
+\section{国内外研究现状}
+
+
+
+\subsection{地磁传感器车辆检测研究现状}
+地磁传感器是一种基于环境磁场变化的路侧检测设备，通常采用磁阻器件对周围磁场进行连续采样。当车辆驶过传感器附近时，车辆所含铁磁材料会对局部磁场分布产生扰动，使磁信号在幅值与形态上出现显著变化；对该扰动信号进行检测与判别即可实现车辆通过事件的识别。[12][13]。
+
+早期研究以单点车辆检出与过车片段起止时刻提取为基础。Haoui等以无线地磁检测网络VDS240为例，展示了节点端完成检测后上报检测记录、再由中心侧汇聚处理的系统形态，并进一步指出在单车检测记录层面可计算速度、占有率、车长以及车头时距等指标[10]。在算法与误差机理层面，Markevičius等提出基于状态判据的车辆检测思路，并指出车辆通过地磁传感器的轨迹差异会显著改变小型地磁传感器记录到的扰动波形形态，因此在检测输出生成时通常需要考虑归一化与自适应处理，以减弱同车不同通过轨迹带来的特征漂移[14]。随着检测可靠性逐步提升，研究开始将单点检测记录用于交通参数估计与分类。Taghvaeeyan与Rajamani构建可路侧布设的磁传感系统，利用纵向布设传感器的互相关估计速度，并结合占有率与速度推断车辆磁长度，同时通过磁场模型抑制邻道大型车辆造成的误触发[11]。Balid等进一步把车辆检测、速度估计、长度估计、车辆分类以及时钟同步算法集成于智能无线传感器并开展实地评估，反映出检测输出能力正向端侧实时一体化并引入同步机制的方向演进[12]。为增强单点输出的可解释性与稳定性，Feng等提出MagMonitor，通过多磁偶极车辆磁场模型实现单传感器速度估计与车辆分类，说明模型化描述有助于在检测输出阶段提取更稳定、更可解释的特征[13]。当研究进一步扩展到阵列观测时，Amodio等利用路面多传感器记录车辆不同部位的多段磁签名，并采用动态时间规整实现车辆型号识别与横向通过位置估计，表明空间采样能够支撑车道尺度的更细粒度刻画[18]。在跨空间连接方面，Kwong等构建基于无线地磁签名匹配的实时旅行时间估计框架，利用带噪磁签名与过车时刻在两点间进行重识别并估计旅行时间分布，验证了地磁检测记录与签名具备跨点复用的匹配价值[19]。然而，当系统从单点走向多点组网并进入双车道场景后，不完美观测会显著放大跨点对应难度。Feng等指出多地磁传感器之间的时钟偏差与换道会引起量测时标错位及漏检与重复检出，但其提出的组网关联方法以检测统计为导向、场景假设较强，难以保证高速双车道密集车流下轨迹精度与ID连续性[20]。Mao等进一步面向随机延迟与不准确检测讨论异步融合机制，并在融合毫米波雷达与地磁量测的场景中验证了方法有效性；但对于仅依赖地磁量测、且量测可能出现更长缺失的低成本高速路侧部署条件，上述思路难以直接覆盖在线跟踪需求[21]。
+
+综上，现有研究已能在单点层面稳定输出车辆检测量测，并进一步派生速度、占有率与车长等参数；在阵列观测条件下，还可获得车道级属性并提取可用于跨传感器匹配的磁签名。然在双车道密集交通的多地磁传感器组网场景下，基线漂移与噪声时变、节点间时钟偏差及随机通信延迟叠加漏检与虚警，造成的量测时序不一致、漏检与多检等问题，仍缺乏有效的系统性解决方案。因此，在量测存在噪声干扰、时序不一致与漏检并存条件下实现多车辆的实时、准确跟踪，并兼顾轨迹精度、连续性与身份一致性，仍是亟待解决的关键问题。
+
+\subsection{滤波算法研究现状}
+在多目标跟踪中，滤波用于在运动模型与量测模型约束下递推目标状态后验，其预测均值与协方差既表征定位结果，也直接用于门控判别与关联似然计算，是轨迹更新与身份维护的基础支撑。在线性高斯且噪声统计较为稳定时，Kalman滤波可给出闭式递推解，因而在工程系统中被广泛采用[38][39]。面向非线性与车辆运动模式变化，EKF以一阶线性化处理弱非线性，UKF以确定性采样点传播统计量，粒子滤波则以采样近似非线性非高斯后验[46][47]；针对加减速等多模态运动，IMM通过并行多模型与交互融合减弱单一模型失配带来的估计偏差[41]。这类方法通常依赖预设且相对稳定的噪声参数，因此在复杂工况下容易出现噪声统计假设偏离真实水平的情况。
+
+真实路侧观测中，虚警、串扰与环境干扰易产生离群量测；若仍假设固定高斯噪声，少量大残差即可拉偏估计并破坏协方差一致性，进而导致门控范围设置失准并增大误关联概率。围绕离群抑制，Masreliez与Martin从鲁棒贝叶斯角度提出抑制异常量测影响的更新思想，通过降低大残差观测对后验的支配作用来提升递推稳定性[59]。Chang等将Huber型M估计引入Kalman更新，对大残差量测进行自适应降权，在保持递推计算简洁的同时增强抗离群能力[60]。Roth等以Student t等重尾分布刻画过程噪声与量测噪声，使滤波器能随残差幅度自动调整等效权重，从概率建模层面降低对固定阈值的依赖[61]。需要指出的是，鲁棒滤波仍需选取鲁棒尺度或自由度等参数，当噪声水平随时间显著变化时仍可能出现参数失配。
+
+除离群量测外，噪声统计未知或随环境变化也会使固定设定的过程噪声与量测噪声协方差难以长期适配，从而削弱门控与似然计算的可靠性。Mehra基于残差统计讨论了过程噪声与量测噪声协方差的在线辨识方法，为滤波参数自校正提供了经典框架[62]。Xia等提出自适应衰减Kalman滤波，通过引入衰减因子对协方差进行动态调整以吸收模型失配，从而维持估计一致性并降低发散风险[64]。进一步地，变分贝叶斯将噪声协方差视为随机变量并在递推中近似推断，使噪声不确定性可传递到状态后验并实现自适应更新[55]。在缺测与间歇量测条件下，Sinopoli等给出误差协方差的演化与稳定性条件，揭示量测到达率不足将导致估计不稳定[63]。总体而言，现有研究分别从鲁棒更新、噪声自适应与缺测分析提供了基础工具，但多以单目标或已知量测归属为前提，尚缺少在多目标关联场景下对门控尺度与似然稳定性的系统考虑。
+
+\subsection{数据关联研究现状}
+与单目标场景不同，多目标跟踪中的核心难点之一在于量测归属不确定性。滤波预测只能为每条轨迹给出先验分布，而当前时刻的量测应由哪一条轨迹吸收更新，需要通过数据关联判定；一旦发生错误关联，错误量测会进入状态更新，并引发状态漂移与ID切换，并在递推中持续放大[39]。
+
+在早期研究中，Singer与Stein已关注量测来源不精确条件下的跟踪滤波问题，指出关联不确定性会显著影响递推估计的稳定性与可信度[40]。为降低候选匹配数量，工程中通常先依据预测均值与协方差等构造一个验证门（即门控），以剔除明显不可能的匹配；在此框架下，Sea提出实时监视系统的次优关联决策过程，采用门控内最近邻量测进行更新，后续被概括为最近邻数据关联（Nearest Neighbor Data Association, NNDA）[65]。但在密集交通与变道交互下，多个验证门易重叠，单一扫描的最近邻选择更易误配[39]。
+
+确定性数据关联在每一帧输出唯一的一一匹配。典型代表包括NNDA及其全局化形式全局最近邻（Global Nearest Neighbor, GNN），即在门控后的候选集合上求解指派问题以获得整体代价最小的匹配。Kuhn提出的匈牙利算法是GNN常用的指派求解器[50]。该类硬判决方法实现简单、计算量小，但在量测拥挤时一旦误配往往难以自纠，ID切换风险上升[39]。为降低硬判决错误匹配带来的冲击，Bar-Shalom与Tse提出概率数据关联（Probabilistic Data Association, PDA），对验证门内候选量测计算关联概率并加权更新[42]；Fortmann等扩展得到联合概率数据关联（Joint Probabilistic Data Association, JPDA），通过联合关联事件的概率化处理缓解多目标争抢量测导致的轨迹黏连[43]。针对在线复杂度约束，国内研究提出广义概率数据关联与简化JPDA等近似形式，以减少联合事件枚举开销并提升可用性[56][57]，简化JPDA也被用于密集杂波条件下的稳健跟踪[58]。
+
+单扫描关联的局限在于早期误配会改变后续门控结构并产生链式传播。多扫描方法在有限时间窗口内综合多帧证据进行联合决策或后验校正：Reid提出多假设跟踪（Multiple Hypothesis Tracking, MHT）以并行维护多套关联假设[44]，Cox与Hingorani给出高效实现并强调剪枝对实时性的关键作用[45]；Murty算法用于生成多组候选指派[51]，网络流、贪心与K最短路等全局优化框架可用于多帧轨迹连接[52][53][54]。在在线应用中，多扫描方法通常结合固定滞后窗口与近似求解，将计算复杂度控制在可承受范围内并获取跨帧一致性收益[66]。
+
+\subsection{在线轨迹聚类方法研究现状}
+与前述侧重递推滤波与在线关联不同，本节关注当观测出现较长中断或连续缺测时，在线跟踪输出往往分解为多个短轨迹片段，从而出现轨迹碎片化现象。在此背景下，研究重点由单次量测更新转向跨片段的一致性组织，即将轨迹点或轨迹片段作为聚类对象，利用时空邻近与运动一致性线索对同一目标的片段进行增量聚合与归并，以在更长时间尺度上提升轨迹连续性与身份一致性[65][66]。
+
+从聚类的一般方法出发，密度聚类常被用作基础工具。DBSCAN以密度可达性定义簇结构，能够发现任意形状的簇，并将低密度样本识别为噪声点，因此在噪声与离群点并存的数据中具有较好的结构分离能力[67]。不过，DBSCAN主要面向静态数据集，难以直接满足数据流场景中一次扫描、有限存储与持续到达的处理约束。面向数据流聚类，CluStream将在线阶段的微簇维护与离线阶段的宏聚类分析相分离，通过维护可更新的统计摘要支持不同时间尺度上的聚类查询，为流式数据的可扩展聚类提供了经典范式[68]。在此基础上，DenStream进一步引入核心微簇、潜在微簇与离群微簇等结构，并结合剪枝策略实现对噪声与演化簇结构的在线处理，使聚类过程在数据分布随时间变化时仍能保持跟踪性与稳健性[69]。总体来看，上述工作形成了由静态密度聚类向演化数据流聚类拓展的基础框架，为后续将轨迹样本视为数据流并进行增量归并提供了方法论支撑。
+
+进一步面向轨迹数据，已有研究指出仅依赖通用点集聚类往往不足以刻画轨迹数据中蕴含的时序信息与运动一致性，从而难以稳定完成片段归并。为此，研究者提出面向轨迹数据流的在线聚类方法，将轨迹点序列转化为具有时序语义的表示单元并进行增量组织。Yu等提出CTraStream，将移动对象的增量轨迹表示为线段流，并结合线段间距离度量与在线更新机制，在流式到达过程中持续形成包含时空信息的轨迹簇，为轨迹数据流的实时模式提取提供了可操作框架[70]。Mao等进一步针对流式轨迹的概念漂移与时空开销约束提出OCluST，通过微聚类与宏聚类两级结构在给定时间跨度内维护轨迹簇，使聚类结果能够随轨迹模式演化而更新，体现了时间窗口内增量聚合的轨迹流聚类思路[71]。然而，当数据呈现长间隔缺测、目标数量动态变化时，现有在线轨迹聚类方法仍难同时兼顾簇结构的稳定维护与误聚类抑制。
+
+
+
+\section{论文研究内容及章节安排}
+
+本文的研究内容是将多地磁传感器车辆检测与目标跟踪技术相结合，面向单向双车道高速路段的地磁检测数据，实现多车辆在线跟踪并输出连续、身份一致的车辆轨迹。全文安排如下：
+
+第一章为绪论，阐述高速公路运行监测与微观过程管控需求，概述地磁感知与车辆跟踪研究现状，明确本文研究问题、技术路线与创新点。
+第二章给出单向双车道多地磁布设与量测建模，并介绍车辆检测与事件生成、状态空间模型、贝叶斯递推、门控与数据关联以及轨迹重构相关基础概念，为后续方法推导统一符号与假设。
+
+第三章面向噪声统计不确定、短时漏检与密集交通下的关联歧义，提出变分贝叶斯噪声自适应滤波结合门控与软关联的在线多目标跟踪方法，并给出算法流程与性能分析。
+
+第四章面向连续缺测引发的轨迹碎片化问题，设计基于聚类的轨迹重构策略，对跟踪输出进行二级整合并验证其有效性。第五章总结全文工作与主要结论，讨论研究局限并展望后续改进方向。
+
+
+
+
+
+\chapter{多地磁传感器车辆目标跟踪理论概述}
+\label{ch:ch2_event_detect}
+
+\section{引言}\label{sec:ch2_intro}
+
+在前述研究背景与相关工作综述的基础上，本章对双车道场景下多地磁传感器部署对多目标车辆进行目标跟踪的相关理论及部署模型进行详细阐述，首先对本文所涉及的单向双车道的部署模型及其对应的测量模型进行详细的阐述，其次是对于其中涉及的理论部分进行阐述，包括地磁传感器对车辆进行检测的相关理论，包括使用地磁检测车辆的原理，以及车辆检测算法，以及后文将会用到的变分贝叶斯的相关理论以及第四章会用到的轨迹聚类的方法的理论。
+
+
+\section{地磁传感器检测车辆}\label{sec:ch2_principle}
+
+\subsection{地磁传感器检测车辆原理}\label{sec:ch2_basic}
+
+地磁传感器通过磁阻器件对安装位置处的三轴磁场强度进行连续采样。由于地球磁场在短时间尺度内相对平稳，无车条件下传感器观测通常围绕一条基线缓慢波动。当车辆进入传感器的有效作用范围时，车辆所含铁磁材料会改变局部磁场分布，使三轴磁场观测在幅值与形态上出现明显偏移；车辆驶离后，观测值逐步回到基线附近。由此，车辆通过过程可以抽象为磁场观测相对基线的偏离与回归过程，为车辆检测提供了可观测依据[73]。
+
+%\begin{figure}[!htbp]
+%    \centering
+%    \includegraphics[width=0.86\linewidth]{fig_mag_disturbance}
+%    \caption{车辆经过地磁传感器时的磁场扰动示意图}
+%    \label{fig:mag_disturbance}
+%\end{figure}
+
+在上述机理基础上，车辆检测可进一步表述为事件化输出问题。通过估计无车基线并监测磁场偏移的变化，可确定车辆进入与离开对应的事件起止时刻，并由偏移幅值、持续时间及波形结构提取事件特征[74]。这类事件化描述不仅用于车辆存在性判定，也为后续速度估计、车辆分类以及跨传感器匹配提供基础输入，因此事件边界的稳定性与特征的一致性对后续目标跟踪具有直接影响。
+
+%\begin{figure}[!htbp]
+%    \centering
+%    \includegraphics[width=0.86\linewidth]{fig_mag_disturbance}
+%    \caption{车辆经过地磁传感器时的磁场扰动示意图}
+%    \label{fig:mag_disturbance}
+%\end{figure}
+
+同时需要注意，地磁扰动具有显著的空间衰减特性。车辆与传感器的横向距离增大时，扰动幅值会明显下降，信噪比随之降低，事件触发的可靠性与边界精度会受到影响，从而增加漏检风险。为获得更清晰的扰动响应与更稳定的事件特征，传感器通常布设在车道线附近，使车辆通过时具有更高的观测幅度与更可分的波形形态。
+
+
+
+\subsection{地磁车辆检测算法}\label{sec:vehicle_detection}
+
+地磁车辆检测的任务是在连续三轴磁场采样序列中识别由车辆通过引起的扰动区间，并在基线缓慢漂移与随机噪声叠加的条件下保持触发稳定。不同系统在采样频率、特征构造与上报字段上存在差异，但整体处理思路通常一致：先对原始观测进行平滑去噪并在线估计无车基线，再将三轴相对基线的偏移量压缩为标量检测统计量，最后通过判决逻辑确定车辆是否进入与离开，并据此生成检测记录。工程实现中，阈值判决与基于有限状态机的序列判决较为常见[3,5]。
+
+为便于统一判决，设传感器在第 $k$ 个采样时刻的三轴磁场观测向量为
+\[
+\mathbf{B}(k) =
+\begin{bmatrix}
+	B_x(k) \\
+	B_y(k) \\
+	B_z(k)
+\end{bmatrix},
+\]
+其中 $B_x(k)$、$B_y(k)$、$B_z(k)$ 分别表示 $x$、$y$、$z$ 三个轴向的磁场分量观测值；设 $\bar{\mathbf{B}}(k)$ 表示对应时刻的无车基线估计向量，通常由滑动平均、低通滤波或递推估计获得。基于此，可定义标量检测统计量：
+
+\begin{equation}
+	d(k)=\left\|\mathbf{B}(k)-\bar{\mathbf{B}}(k)\right\|_{2}
+	\tag{2-1}
+\end{equation}
+
+其中 $d(k)$ 表示第 $k$ 个采样时刻的扰动强度，$\|\cdot\|_2$ 表示二范数。该统计量以幅值形式刻画三轴偏移的综合程度，能够将方向相关的波形差异转化为统一比较的幅值指标。由于 $d(k)$ 会随车型、车速、车辆相对传感器的通过位置以及姿态等因素产生幅值波动，同时基线也可能随温度或环境磁背景变化而缓慢漂移，因此检测阶段通常需要采用阈值自适应或引入序列一致性约束，以降低长期部署中阈值失配与抖动触发带来的稳定性下降[4]。
+
+在判决逻辑上，阈值判决通过比较 $d(k)$ 与阈值 $T$ 实现二值判定：当 $d(k)>T$ 时判为有车，否则判为无车，其中 $T$ 为判决阈值。该方法结构简单、计算代价低，适合在传感器端实时运行，但固定阈值对幅值变化与基线漂移较敏感。为提升不同工况下的可用性，可采用自适应阈值策略，根据近期噪声水平或统计量分布对 $T$ 进行在线更新，从而在车辆幅值变化或背景波动时维持较稳定的检出性能。
+
+仅依赖逐点阈值比较时，$d(k)$ 在阈值附近的抖动可能引发重复触发或短脉冲误检。为抑制这类现象，常在阈值判决结果基础上引入状态机判决机制。有限状态机（Finite State Machine, FSM）是状态机判决的一种典型实现，其将检测过程划分为无车、进入确认、有车、离开确认等状态，并引入连续点数或最小持续时间约束：只有当进入条件持续满足一定长度时才确认车辆进入，同理只有离开条件持续满足一定长度时才确认车辆离开，从而提高对短时噪声与突发干扰的容忍度。在多车道环境下，还可结合多轴一致性、滞回阈值或车道约束等机制，降低相邻车道干扰引发的误检概率[4]。
+
+当进入与离开时刻被稳定确定后，系统即可生成一条车辆检测记录。通常以进入时刻与离开时刻表征车辆在传感器有效探测区内的通过区间，并可进一步输出扰动峰值与持续时长等特征字段，为速度估计、占有率计算、车长推断以及跨点数据关联提供基础量测输入[1,6]。
+
+
+\section{多地磁传感器部署模型及系统介绍}\label{sec:ch2_platform}
+
+在完成地磁车辆检测并获得事件化输出后，多目标跟踪问题的输入不再是连续磁场波形，而是由多个地磁传感器节点在车辆通过时产生的离散量测序列。由于地磁传感器在空间上分布、节点时钟无法完全对齐且数据通过无线链路汇聚，量测在时间轴与空间轴上都呈现离散、异步和不完备特性。为使后续算法的推导具有统一的符号体系与明确的输入边界，本节从系统实现与数学建模两个层面给出多地磁车辆目标跟踪的基础描述。
+
+
+
+\subsection{系统架构}
+为将多地磁传感器采集到的车辆检测信息进一步用于目标跟踪，本文搭建了如图2.8所示的路侧感知与后台处理系统。系统的数据链路可以概括为三步：地磁传感器节点在路侧生成车辆检测数据，数据传输模块对多节点数据进行汇聚与回传，后台处理端在事件流输入条件下完成多目标跟踪与轨迹输出。系统由地磁传感器节点、数据传输模块和后台处理模块构成，各部分功能与数据流向如下。
+
+%\begin{figure}[!htbp]
+%    \centering
+%    \includegraphics[width=0.88\linewidth]{fig_platform_arch}
+%    \caption{车辆信息检测平台总体架构示意}
+%    \label{fig:platform_arch}
+%\end{figure}
+
+首先，地磁传感器节点负责前端磁场连续采样与车辆通过检测。本系统采用一体化节点设计，将三轴地磁传感器 VCM5883、微控制单元 MCU、LoRa 通信模块以及太阳能供电与充电单元集成封装于同一设备中，实物如图2.9所示。VCM5883持续采集节点周围磁场变化并输出三轴磁场序列，MCU在端侧完成必要的预处理与判决，并运行状态机检测逻辑以识别车辆通过引起的磁扰动片段，从而生成车辆检测数据。检测数据以离散量测形式组织，通常包含触发时间戳、节点位置戳与反映磁扰动强度的特征量等字段。其中，触发时间戳与节点位置戳是后续时序组织与空间映射的基础信息，磁特征可作为补充线索用于提高复杂车流条件下的区分能力。节点生成检测记录后，经 LoRa 通信模块上报至路侧数据传输模块；太阳能供电与充电单元用于保障节点在无外接电源条件下的持续运行，提升长期部署的稳定性。需要指出的是，时间戳由节点本地时钟给出，不同节点之间可能存在静态或缓慢变化的时钟偏差，该偏差会表现为同一车辆在不同节点处量测时标的系统性错位，后续在量测建模与数据关联中需考虑其影响。
+
+%\begin{figure}[!htbp]
+%    \centering
+%    \includegraphics[width=0.88\linewidth]{fig_platform_arch}
+%    \caption{车辆信息检测平台总体架构示意}
+%    \label{fig:platform_arch}
+%\end{figure}
+
+其次，数据传输模块承担多节点数据汇聚与公网回传功能，其实物如图2.10所示。该模块为一体化物联网通信基站，具备 LoRa 近端通信与蜂窝网络远端回传两类能力。在近端通信侧，模块内置基于 LoRa 的私有协议，可与沿线部署的地磁传感器节点建立稳定无线连接，实现多节点检测记录的集中接入与可靠交互，有效通信距离可达约 5 km。在远端回传侧，通过插装物联网卡接入 4G 网络，模块与后台处理端建立通信链路，并按照预设周期将缓存的检测数据打包上传，从而实现多点事件数据的集中回传与后台统一接入。
+
+%\begin{figure}[!htbp]
+%    \centering
+%    \includegraphics[width=0.88\linewidth]{fig_platform_arch}
+%    \caption{车辆信息检测平台总体架构示意}
+%    \label{fig:platform_arch}
+%\end{figure}
+
+最后，后台处理模块承担数据流接入与在线跟踪计算两项核心任务，其作用是将数据传输模块回传的地磁检测信息转化为可持续更新的车辆跟踪结果。本文目前采用云服务器实现后台处理端，以便于集中管理、统一运行与后续扩展。在数据处理流程上，后台通过网络接口持续接收数据传输模块推送的事件数据流，完成数据解析与字段校验，并在多车并行条件下结合数据关联、状态估计与车道判别或实时聚类等处理，递推得到车辆在路段内的运动状态与行驶车道的时间序列估计，实现对车辆目标的连续跟踪。需要说明的是，检测数据流在后台侧按到达顺序进入处理链路，受无线链路时延与回传机制影响，部分观测可能出现随机延迟甚至迟到到达，导致观测到达顺序与实际触发时间顺序不一致，从而对关联与更新过程产生直接影响。这类时序不一致与缺测现象属于本文后续量测建模与算法设计需要显式考虑的非理想因素之一，相关方法将在后续章节中进一步展开。
+
+%\begin{figure}[!htbp]
+%    \centering
+%    \includegraphics[width=0.88\linewidth]{fig_platform_arch}
+%    \caption{车辆信息检测平台总体架构示意}
+%    \label{fig:platform_arch}
+%\end{figure}
+
+综上，图2.8所示系统贯通了数据流生成、无线汇聚回传与后台在线处理的完整流程，使多点地磁传感器检测记录能够以事件流形式进入目标跟踪算法。为进一步将检测记录形式化为可计算的时空量测，下一节将给出双车道场景下传感器空间布设与编号规则，并据此建立统一的量测表达。
+
+
+\subsection{双车道多地磁传感器部署模型}\label{sec:ch2_summary}
+
+图2.4给出了本文研究的单向双车道高速路段及其多地磁传感器布设方式。为获得可用于车辆目标跟踪的离散观测序列，本文沿车辆行驶方向以固定纵向间距布设多个观测位置；在每一个观测位置，分别在道路两侧边界车道线附近各布设一个地磁传感器节点，从而形成一组左右成对的观测点。图中实心圆点表示地磁传感器节点。车辆沿纵向行驶时将依次触发相邻观测位置处的节点并产生事件量测，这为后续的速度估计、数据关联与轨迹构建提供了基础输入。
+
+%\begin{figure}[!htbp]
+%    \centering
+%    \includegraphics[width=0.88\linewidth]{fig_platform_arch}
+%    \caption{车辆信息检测平台总体架构示意}
+%    \label{fig:platform_arch}
+%\end{figure}
+
+为便于后续建模与推导，建立道路坐标系：以车辆行驶方向为 $x$ 轴正方向，以横向跨车道方向为 $y$ 轴正方向，并取上游第一组传感器所在的纵向观测位置为坐标原点。本文仅考虑在两条边界车道线附近布设节点，并与后续车道线索引保持一致，将两条布设车道线编号为
+
+\begin{equation}
+	i \in \{0,2\}
+	\tag{2-2}
+\end{equation}
+
+其中 $i=0$ 表示左侧边界车道线，$i=2$ 表示右侧边界车道线。沿行驶方向的观测位置按组编号记为
+
+\begin{equation}
+	k = 0,1,\ldots,K-1
+	\tag{2-3}
+\end{equation}
+
+则位于车道线 $i$ 且属于第 $k$ 组观测位置的传感器记为 $b_{i,k}$。传感器节点的空间位置用二维坐标向量表示为
+
+\begin{equation}
+	\mathbf{s}_{i,k} =
+	\begin{bmatrix}
+		x_k \\
+		y_i
+	\end{bmatrix},
+	\qquad
+	i\in\{0,2\},\; k=0,1,\ldots,K-1
+	\tag{2-4}
+\end{equation}
+
+其中 $x_k$ 为第 $k$ 个纵向观测位置的坐标，$y_i$ 为对应边界车道线的横向坐标。本文采用对称布设方式，即同一组中的 $b_{0,k}$ 与 $b_{2,k}$ 位于同一纵向观测位置（具有相同的 $x_k$），二者仅在横向位置 $y$ 上不同。相邻两组观测位置的纵向间距记为 $L_a$，则
+
+\begin{equation}
+	x_k = x_0 + kL_a,
+	\qquad k=0,1,\ldots,K-1
+	\tag{2-5}
+\end{equation}
+
+其中 $x_0$ 为第一组观测位置的纵向坐标，后续推导中通常取 $x_0=0$ 以简化表达。
+
+需要指出的是，对称布设在工程实现与空间标定上更为直接，但在双车道并行行驶与换道条件下也会增强数据关联的歧义性：一方面，同一纵向观测位置同时存在左右两个观测点，多车并行时不同车辆的事件在时间轴上更易邻近甚至交叠；另一方面，车辆横向位置变化可能导致左右节点的触发强度与触发时刻出现偏移，从而使事件序列的对应关系更难仅凭时空邻近判定。基于上述部署模型，下一节将给出事件量测的统一表示，并结合理想与非理想事件流示例说明后续跟踪需要面对的主要不确定性来源。
+
+\subsection{双车道多地磁传感器测量模型}
+
+地磁传感器节点检测到车辆通过后，会向后台上报一条检测记录。将后台按到达顺序接收的第 $j$ 条记录记为量测向量 $\mathbf z_j$，结合本文系统的上报格式，量测可定义为
+\begin{equation}
+	\mathbf z_j=
+	\begin{bmatrix}
+		t_j &
+		id_j &
+		x_{id_j} &
+		y_{id_j} &
+		\ell_{id_j} &
+		Mpeak_j
+	\end{bmatrix}^{\mathrm T},
+	\label{eq:ch3_zj_v2}
+\end{equation}
+其中，$t_j$ 为触发时间戳，$id_j$ 为地磁传感器设备编号，$x_{id_j}$ 和 $y_{id_j}$ 分别为该设备在道路坐标系下的纵向和横向安装坐标，$\ell_{id_j}$ 为该设备所属边界车道线编号，$Mpeak_j$ 为该次触发片段上报的地磁峰值。式~\eqref{eq:ch3_zj_v2} 描述了车辆在时刻 $t_j$ 于观测点 $(x_{id_j},y_{id_j})$ 附近形成的一次离散量测。
+
+\paragraph{(1)理想检测数据流形态}
+
+
+图2.5(a)给出了理想情况下检测数据流的典型形态。图中以时间戳为横轴、设备编号为纵轴，每一个散点对应一条检测记录。
+
+如图所示，同一车辆沿路段向下游行驶时，其检测点会随纵向布设顺序逐步出现在更下游的观测位置上，在 $\text{Time--SensorID}$ 平面内呈现近似单调上升的轨迹结构。当车速变化不剧烈时，同一车辆在相邻两个纵向观测位置处的触发时间差满足近似关系
+
+\begin{equation}
+	t_{k+1}-t_k \approx \frac{L_a}{v}
+	\tag{2-7}
+\end{equation}
+
+其中 $L_a$ 为相邻观测位置的纵向间距，$v$ 为车辆纵向速度。由此可见，理想条件下检测点在时间轴与空间轴上具有较强的连续性，这为后续门控与数据关联提供了几何先验。此外，车辆在车道内保持直行时，其检测点通常持续出现在同一侧传感器序列上，如图2.5(a)中绿色圆形、黄色方形所连接轨迹所示；而发生换道时，检测点会在两侧传感器序列之间出现切换或过渡，如图2.5(a)中橙色三角所连接跨车道轨迹所示。
+
+\paragraph{(2)非理想检测数据流形态}
+
+
+真实道路环境下，检测数据流通常表现为图2.5(b)所示的非理想形态，与图2.5(a)相比主要差异可归纳为以下三类。
+
+首先是漏检导致的量测缺失。部分观测位置未产生检测点，既可能是单次缺失，也可能在若干相邻观测位置上连续缺失，从而使同一车辆的检测点出现明显空档并导致轨迹结构断裂，如橙色三角所连轨迹在变道过程中丢失关键数据点 $b_{2,3}$，而黄色方形所连接轨迹连续丢失 $b_{1,3}$、$b_{1,4}$、$b_{1,5}$ 三个数据点。这会直接削弱由时间差推得的速度约束，并增大关联不确定性。
+
+其次是虚警导致的杂波量测。相邻车道干扰、环境噪声或异常电磁扰动可能产生与真实车辆无关的检测点，其分布通常较为离散且缺乏连续结构。图2.5(b)中的灰色五边形散点即为典型杂波样本，它们会扩大候选关联集合，增加误关联风险，尤其在车流密集时更为突出。
+
+最后是时间戳误差与迟到到达。节点时钟偏差与链路延迟会导致时间戳偏移或观测迟到，从而使同一车辆的检测点在时间轴上出现错位或局部乱序。
+
+根据图2.7所示的测量模型，本文研究的多地磁传感器多车辆目标跟踪算法的目标是利用车辆经过多个地磁传感器时所产生的检测时间以及车辆磁场强度等测量值，在存在传感器时间误差、漏检和虚警等条件下，实现车辆与地磁传感器测量数据之间的可靠关联，并对车辆运动状态以及车辆行驶车道等信息进行准确估计。同时进一步探讨在系统长期运行导致连续多次漏检情况下的鲁棒车辆跟踪方法。
+
+
+\section{数据关联算法}\label{sec:orm}
+多目标跟踪中，滤波器负责在给定量测来源的前提下递推估计目标状态，而数据关联负责在每次更新时刻确定量测与目标航迹之间的对应关系。由于实际环境中存在杂波、漏检以及目标数目随时间变化等因素，量测的来源往往无法直接判定，导致关联决策成为影响跟踪精度与身份稳定性的关键环节。工程上常用的数据关联流程通常包括三步。首先根据各航迹的预测信息在量测空间构造跟踪波门，剔除显然不可能来自该航迹的量测。其次在波门内计算量测与航迹之间的一致性度量，例如欧氏距离、马氏距离或基于似然的代价。最后在互斥约束下完成量测分配并进行航迹更新，同时对未分配量测与未更新航迹按管理规则处理。后续章节将在该通用框架下，引入软关联与多扫描一致性推断，以降低密集场景下的误关联与身份切换。
+
+为避免与第2.3节传感器沿纵向的索引符号混淆，下文以$t_k$表示第$k$次更新对应的时间戳，$k=1,2,\ldots$仅表示更新序号。记目标状态在$t_k$处的离散表示为$\mathbf{x}_k \triangleq \mathbf{x}(t_k)$。在更新时刻$t_k$，滤波器根据上一时刻$t_{k-1}$的后验估计对各条活动航迹进行预测，得到预测航迹集合
+
+\begin{equation}
+	\mathcal{T}_{k|k-1}=\left\{\mathcal{T}^{(i)}_{k|k-1}\right\}_{i=1}^{N_k},
+\end{equation}
+
+其中$N_k$为参与本次更新的预测航迹条数，$\mathcal{T}^{(i)}_{k|k-1}$表示第$i$条预测航迹。通常用$\hat{\mathbf{x}}^{(i)}_{k|k-1}$与$\mathbf{P}^{(i)}_{k|k-1}$分别表示其预测状态均值与预测协方差。同一更新时刻用于更新的量测构成量测集合
+
+\begin{equation}
+	\mathcal{Z}_k=\left\{\mathbf{z}^{(j)}_k\right\}_{j=1}^{M_k},
+\end{equation}
+
+其中$M_k$为量测数，$\mathbf{z}^{(j)}_k$为第$j$个量测。一般情况下，$\mathcal{Z}_k$包含真实目标量测与杂波量测，且真实目标可能发生漏检。
+
+为描述航迹与量测之间的一对一指派关系，引入关联变量
+
+\begin{equation}
+	\theta_k^{(i)}\in\left\{0,1,2,\ldots,M_k\right\},
+\end{equation}
+
+其中$\theta_k^{(i)}=j$表示第$i$条航迹与量测$\mathbf{z}^{(j)}_k$建立关联，$\theta_k^{(i)}=0$表示第$i$条航迹在$t_k$未获得有效量测更新。等价地，可用二值指派矩阵$\mathbf{A}_k=[a_{i,j}]$表示指派结果，其元素定义为
+
+\begin{equation}
+	a_{i,j}=
+	\begin{cases}
+		1, & \text{量测 }\mathbf{z}^{(j)}_k \text{分配给航迹 } i,\\
+		0, & \text{否则}.
+	\end{cases}
+\end{equation}
+
+在经典的一对一关联假设下，指派矩阵需满足互斥约束
+
+\begin{equation}
+	\sum_{j=1}^{M_k} a_{i,j}\le 1,\qquad i=1,\ldots,N_k,
+\end{equation}
+\begin{equation}
+	\sum_{i=1}^{N_k} a_{i,j}\le 1,\qquad j=1,\ldots,M_k.
+\end{equation}
+
+其中第一式表示每条航迹至多选择一个量测，第二式表示每个量测至多分配给一条航迹。未被分配的量测通常视为杂波，未获得量测的航迹对应漏检或暂不更新情形。
+
+\subsection{跟踪波门}
+
+跟踪波门用于在进入关联求解之前筛除不可能的航迹与量测候选对，从而降低候选规模并减少误匹配风险。其基本思想是利用航迹预测所给出的不确定性范围，在量测空间构造一个有限区域，仅保留落入该区域的候选量测用于后续关联。跟踪波门既是复杂度控制手段，也是鲁棒性的重要来源。波门设置过宽会引入大量无关候选，增加误关联概率并提升计算量；波门设置过窄则可能把真实量测排除在外，导致漏检增多并影响航迹连续性。因此，波门的形状与尺度通常需要与量测噪声水平、预测不确定性以及场景运动特性相匹配。工程上常见的波门形式主要包括矩形波门、椭球波门与扇形波门。
+
+\subsubsection{（1）矩形波门}
+
+矩形波门通常在各量测维度上分别设置阈值，适用于量测维度之间相关性较弱或需要快速筛选的场景。设 $\hat{\mathbf{z}}^{(i)}_{k|k-1}$ 为航迹 $i$ 在 $t_k$ 的预测量测，其第 $r$ 个分量记为 $\hat{z}^{(i)}_{k|k-1,r}$，量测 $\mathbf{z}^{(j)}_k$ 的第 $r$ 个分量记为 $z^{(j)}_{k,r}$。给定各维阈值 $\Delta_r$，矩形波门可写为
+\begin{equation}
+	\mathcal{G}^{(i)}_k
+	=
+	\left\{
+	j ~\big|~
+	\left|z^{(j)}_{k,r}-\hat{z}^{(i)}_{k|k-1,r}\right|
+	\le \Delta_r,\quad r=1,\ldots,m
+	\right\},
+\end{equation}
+其中 $m$ 为量测维度。矩形波门实现简单，但当量测维度相关性较强时，其波门形状往往偏保守。
+
+\subsubsection{（2）椭球波门}
+
+椭球波门利用预测不确定性构造统计意义下的等概率区域，是目标跟踪中最常用的波门形式之一。设航迹 $i$ 的创新向量为
+\begin{equation}
+	\boldsymbol{\nu}^{(i,j)}_k
+	=
+	\mathbf{z}^{(j)}_k
+	-
+	\hat{\mathbf{z}}^{(i)}_{k|k-1},
+\end{equation}
+创新协方差为 $\mathbf{S}^{(i)}_k$，则平方马氏距离定义为
+\begin{equation}
+	d_k^2(i,j)
+	=
+	\left(\boldsymbol{\nu}^{(i,j)}_k\right)^\top
+	\left(\mathbf{S}^{(i)}_k\right)^{-1}
+	\boldsymbol{\nu}^{(i,j)}_k .
+\end{equation}
+
+在卡尔曼滤波的线性量测情形下，若量测模型为
+\begin{equation}
+	\mathbf{z}_k=\mathbf{H}_k\mathbf{x}_k+\mathbf{v}_k,\qquad
+	\mathbf{v}_k\sim\mathcal{N}(\mathbf{0},\mathbf{R}_k),
+\end{equation}
+则预测量测与创新协方差可分别写为
+\begin{equation}
+	\hat{\mathbf{z}}^{(i)}_{k|k-1}
+	=
+	\mathbf{H}_k
+	\hat{\mathbf{x}}^{(i)}_{k|k-1},
+\end{equation}
+
+\begin{equation}
+	\mathbf{S}^{(i)}_k
+	=
+	\mathbf{H}_k
+	\mathbf{P}^{(i)}_{k|k-1}
+	\mathbf{H}_k^\top
+	+
+	\mathbf{R}_k .
+\end{equation}
+
+若量测维度为 $m$ 且高斯假设成立，则 $d_k^2(i,j)$ 近似服从自由度为 $m$ 的卡方分布。给定波门概率 $P_G$，取门限
+\[
+\gamma=\chi^2_{m}(P_G),
+\]
+椭球波门可写为
+\begin{equation}
+	\mathcal{G}^{(i)}_k
+	=
+	\left\{
+	j ~\big|~
+	d_k^2(i,j)\le \gamma
+	\right\}.
+\end{equation}
+
+\subsubsection{（3）扇形波门}
+
+扇形波门常用于量测以极坐标表达或目标运动具有明显方向性的场景，其基本做法是在距离与方位角上同时施加约束。设量测位置与预测位置的相对向量为 $\Delta\mathbf{p}^{(i,j)}_k$，其模长为 $r^{(i,j)}_k$，与预测航向夹角为 $\varphi^{(i,j)}_k$，则扇形波门可表示为
+\begin{equation}
+	\mathcal{G}^{(i)}_k
+	=
+	\left\{
+	j ~\big|~
+	0\le r^{(i,j)}_k\le r_{\max},\;
+	|\varphi^{(i,j)}_k|\le \varphi_{\max}
+	\right\},
+\end{equation}
+其中 $r_{\max}$ 与 $\varphi_{\max}$ 为距离与角度阈值。扇形波门能够显式引入运动方向先验，在单向行驶或强方向约束场景下较为有效。
+
+\subsection{硬关联方法与匈牙利算法}
+
+硬关联方法在每个更新时刻输出确定的一对一指派结果。设 $c_{i,j}$ 为将量测 $j$ 分配给航迹 $i$ 的代价。令 $\mathbf{A}_k=[a_{i,j}]$ 为指派矩阵，则单时刻一对一指派可表述为线性指派问题
+\begin{align}
+	\min_{\mathbf{A}_k}\quad 
+	& \sum_{i=1}^{N_k}\sum_{j=1}^{M_k} c_{i,j}\,a_{i,j} \\
+	\text{s.t.}\quad
+	& a_{i,j}\in\{0,1\}, \\
+	& \sum_{j=1}^{M_k} a_{i,j}\le 1, \\
+	& \sum_{i=1}^{N_k} a_{i,j}\le 1 .
+\end{align}
+
+当候选对 $(i,j)$ 落在跟踪波门外时，通常将 $c_{i,j}$ 置为较大值以避免不合理匹配。匈牙利算法是求解线性指派问题的经典方法，能够在多项式时间内得到全局最优的一对一指派解，因此常作为在线跟踪系统的单时刻硬关联基线。
+
+\subsection{概率数据关联方法}
+
+概率数据关联方法在波门内存在多个候选量测且难以可靠做出硬决策时，引入关联概率对候选量测进行加权更新，从而降低误关联对状态估计的破坏。PDA用于单目标情形，JPDA扩展到多目标并显式考虑互斥约束。
+
+\subsubsection{（1）PDA基本形式}
+
+对航迹 $i$，门内量测 $j\in\mathcal{G}^{(i)}_k$ 的量测似然可写为
+\begin{equation}
+	L_{i,j}
+	=
+	\mathcal{N}
+	\!\left(
+	\mathbf{z}^{(j)}_k;
+	\hat{\mathbf{z}}^{(i)}_{k|k-1},
+	\mathbf{S}^{(i)}_k
+	\right),
+\end{equation}
+
+其中 $\mathcal{N}(\mathbf{z};\boldsymbol{\mu},\mathbf{\Sigma})$ 表示高斯概率密度函数。考虑检测概率 $P_D$ 与杂波密度 $\lambda$，则归一化关联概率可写为
+\begin{equation}
+	\beta_{i,j}
+	=
+	\frac{P_D L_{i,j}}
+	{\lambda V_k^{(i)} + P_D \sum_{\ell\in\mathcal{G}^{(i)}_k}L_{i,\ell}} .
+\end{equation}
+
+并定义漏检概率
+\begin{equation}
+	\beta_{i,0}
+	=
+	1-\sum_{j\in\mathcal{G}^{(i)}_k}\beta_{i,j}.
+\end{equation}
+
+\subsection{多扫描关联与一致性推断}
+
+单扫描数据关联通常仅利用当前更新时刻的量测集合 $\mathcal{Z}_k$ 作出关联决策。当多个航迹的门控区域发生重叠或杂波较强时，仅依赖单时刻信息往往难以稳定消歧。多扫描数据关联利用目标运动的时间连续性，将关联决策扩展到多个更新时刻。
+
+固定滞后窗口长度记为 $L$，窗口内量测序列定义为
+\begin{equation}
+	\mathcal{Z}_{k-L+1:k}
+	=
+	\left\{
+	\mathcal{Z}_{k-L+1},\ldots,\mathcal{Z}_k
+	\right\}.
+\end{equation}
+
+窗口内关联变量序列记为
+\begin{equation}
+	\boldsymbol{\theta}_{k-L+1:k}
+	=
+	\left\{
+	\boldsymbol{\theta}_{k-L+1},\ldots,\boldsymbol{\theta}_k
+	\right\}.
+\end{equation}
+
+多扫描关联的MAP估计可写为
+\begin{equation}
+	\hat{\boldsymbol{\theta}}_{k-L+1:k}
+	=
+	\arg\max_{\boldsymbol{\theta}_{k-L+1:k}}
+	p\left(
+	\boldsymbol{\theta}_{k-L+1:k}
+	\mid
+	\mathcal{Z}_{k-L+1:k}
+	\right).
+\end{equation}
+
+\section{实时聚类算法}
+
+长时间连续缺测会使事件流驱动的在线处理结果表现为若干相互独立的短序列，进而带来后续分析与应用上的不连续性问题。面向数据流场景，在线聚类通过一遍扫描和有限存储的方式，对持续到达的数据进行增量组织与结构维护，是解决此类问题的一类重要工具。
+
+\subsection{在线数据流聚类问题描述}
+
+在线聚类面向的数据通常以流的形式持续到达。记数据流为
+\[
+\{ \mathbf{x}_t \}_{t=1}^{\infty},
+\]
+其中 $\mathbf{x}_t\in\mathbb{R}^d$ 表示在时刻 $t$ 到达的 $d$ 维样本。
+
+与离线聚类不同，在线聚类一般受到两类约束。
+
+第一类约束来自在线处理方式本身。数据以单向流式到达，算法往往只能对数据进行一遍扫描，难以多次遍历历史样本；同时在线系统对单样本处理延迟有要求，内存与计算预算也受到限制。因此，在线聚类需要以增量更新为主，依靠紧凑的数据结构记录必要信息，而不是保存全部历史数据。
+
+第二类约束来自数据分布的时间演化。实际数据流往往存在概念漂移（concept drift），即数据的中心位置、尺度、密度甚至簇的数量会随时间缓慢变化，且可能出现阶段性的生成、消失、合并与分裂。如果仍按静态点集假设进行建模，聚类结构容易被早期数据束缚，难以反映近期分布。为此，在线聚类通常需要引入时间敏感机制，使近期样本对当前结构贡献更大，而较早样本的影响逐渐减弱。
+
+在上述约束下，在线聚类通常在任意时刻 $t$ 维护当前簇集合
+\begin{equation}
+	\mathcal{C}_t
+	=
+	\left\{
+	C_t^{(1)},C_t^{(2)},\ldots,C_t^{(K_t)}
+	\right\},
+\end{equation}
+其中 $K_t$ 为时刻 $t$ 的簇数，$C_t^{(k)}$ 表示第 $k$ 个簇。
+
+为了体现聚类结果对时间的敏感性，常用的时间处理机制主要包括两类。
+
+一类是滑动窗口（sliding window）。算法只保留最近长度为 $W$ 的样本集合
+\[
+\{\mathbf{x}_{t-W+1},\ldots,\mathbf{x}_t\}
+\]
+用于更新与查询。
+
+另一类是衰减机制（fading function）。其基本思想是对历史样本赋予随时间衰减的权重，使得较早样本对当前簇结构的影响逐步降低。
+
+---
+
+\subsection{微簇摘要表示与增量更新}
+
+在数据流场景中，直接对原始样本做全局聚类通常难以控制存储与计算开销。为兼顾效率与表达能力，许多经典方法采用两层结构，将在线维护对象从宏簇转为微簇（micro-cluster）。
+
+\subsubsection{（1）微簇的统计摘要表示}
+
+一种常见的微簇摘要形式是聚类特征向量（clustering feature，CF）：
+
+\begin{equation}
+	\mathrm{CF}
+	=
+	\left(
+	w,\ \mathbf{LS},\ \mathbf{SS},\ t_{\max}
+	\right),
+\end{equation}
+
+其中
+
+- $w$：微簇权重  
+- $\mathbf{LS}\in\mathbb{R}^d$：线性和  
+- $\mathbf{SS}\in\mathbb{R}^d$：平方和  
+- $t_{\max}$：最近更新时间  
+
+若微簇包含样本集合 $\{\mathbf{x}_i\}$，则
+
+\begin{equation}
+	\mathbf{LS}=\sum_i \mathbf{x}_i,
+	\qquad
+	\mathbf{SS}=\sum_i (\mathbf{x}_i \odot \mathbf{x}_i).
+\end{equation}
+
+其中 $\odot$ 表示 Hadamard 积。
+
+微簇中心为
+
+\begin{equation}
+	\boldsymbol{\mu}
+	=
+	\frac{\mathbf{LS}}{w}.
+\end{equation}
+
+---
+
+\subsubsection{（2）尺度信息与离散程度}
+
+微簇的均方半径可定义为
+
+\begin{equation}
+	r^2
+	=
+	\frac{1}{w}
+	\sum_i
+	\left\|
+	\mathbf{x}_i-\boldsymbol{\mu}
+	\right\|^2.
+\end{equation}
+
+展开得
+
+\begin{equation}
+	r^2
+	=
+	\frac{1}{w}
+	\sum_i
+	\left\|
+	\mathbf{x}_i
+	\right\|^2
+	-
+	\left\|
+	\boldsymbol{\mu}
+	\right\|^2.
+\end{equation}
+
+其中
+
+\begin{equation}
+	\sum_i
+	\left\|
+	\mathbf{x}_i
+	\right\|^2
+	=
+	\sum_{\ell=1}^{d} \mathbf{SS}_\ell.
+\end{equation}
+
+---
+
+\subsubsection{（3）增量更新与衰减}
+
+当新样本 $\mathbf{x}_t$ 到达时，微簇统计量更新为
+
+\begin{align}
+	w_t &= \lambda w_{t-1}+1,\\
+	\mathbf{LS}_t &= \lambda \mathbf{LS}_{t-1}+\mathbf{x}_t,\\
+	\mathbf{SS}_t &= \lambda \mathbf{SS}_{t-1}+(\mathbf{x}_t\odot\mathbf{x}_t),\\
+	t_{\max} &= t.
+\end{align}
+
+其中 $\lambda\in(0,1)$ 为衰减因子。
+
+---
+
+\subsection{典型聚类方法概述}
+
+本节选取三类与数据流场景高度相关的方法进行概述，分别为 CEDAS、CluStream 与 DenStream。
+
+\subsubsection{CEDAS}
+
+CEDAS（Clustering of Evolving Data-streams into Arbitrary Shapes）是一类面向数据流的完全在线聚类方法。其核心思想是使用固定半径 $r_0$ 的微簇覆盖数据空间，并通过微簇之间的连接关系形成宏簇。
+
+若两个微簇中心分别为 $\mathbf{c}_p$ 与 $\mathbf{c}_q$，则连接条件为
+
+\begin{equation}
+	\left\|
+	\mathbf{c}_p-\mathbf{c}_q
+	\right\|
+	\le
+	\frac{3}{2}r_0 .
+\end{equation}
+
+%\begin{figure}[htbp]
+%	\centering
+%	\includegraphics[width=0.85\linewidth]{figs/cedas_fig1_redraw.pdf}
+%	\caption{CEDAS微簇与图结构示意（据文献重绘）}
+%	\label{fig:cedas_graph}
+%\end{figure}
+
+
+\subsubsection{CluStream}
+
+CluStream 是经典的两阶段数据流聚类方法。在线阶段维护有限数量的微簇并持续更新其统计摘要；查询阶段再利用这些微簇执行宏聚类，例如通过 $k$-means 算法获得最终聚类结果。
+
+该方法的优势在于在线计算开销较小，但宏簇输出依赖第二阶段重聚类操作，因此在需要高频输出时可能带来额外计算负担。
+
+---
+
+\subsubsection{DenStream}
+
+DenStream 可以视为 CluStream 框架的密度扩展版本。其在线阶段维护两类微簇：
+
+- 潜在微簇（potential micro-cluster）
+- 离群微簇（outlier micro-cluster）
+
+微簇权重随时间衰减，使长期缺乏新样本支持的结构逐渐消失，从而适应概念漂移。
+
+宏簇输出阶段通常采用 DBSCAN 式密度连接，对潜在微簇中心进行聚合，从而能够刻画任意形状的簇结构。
+
+---
+
+\subsection{本章小结}
+
+本章首先介绍了数据流聚类问题的基本特性与约束条件，并在此基础上给出了微簇摘要表示及其增量更新机制。随后对 CEDAS、CluStream 与 DenStream 三类典型方法进行了概述，为后续章节中面向地磁事件流的在线聚类方法设计提供了理论基础。
+
+
+\chapter{基于节点状态自适应与场景概率判别的在线车辆目标跟踪}
+\label{chap:online_tracking}
+
+\section{引言}
+
+在单向双车道高速路段，持续获取车道级车辆轨迹并保持车辆身份一致，是开展路段交通运行状态实时感知、车道级运行指标评估以及变道等驾驶行为分析的重要基础。然而，多地磁传感器系统受传感器安装位置、灵敏度与环境噪声等因素影响，不同节点的检测精度、触发概率和噪声水平并不一致；同时，当邻道大型车辆经过或车辆沿车道中线行驶时，车辆在触发本车道地磁节点的同时，也可能对相邻车道节点产生附加扰动，从而在事件流层面形成类似双侧同时有车通过的观测现象；而在真实双车并行场景下，两条车道上的车辆也会引起双侧节点近同步响应。由于这两类情形在局部事件表现上具有相似性，系统仅凭单次或局部观测往往难以准确区分其究竟来源于单车邻道干扰还是真实双车并行。再叠加多检、漏检和局部缺测等非理想因素，系统极易出现量测来源不清与目标身份混淆，进而引发关联歧义、轨迹碎片化以及车道判别抖动等问题。因此，需要构建一种能够适应节点检测特性变化并兼顾场景不确定性的在线跟踪方法，在事件级量测条件下协同完成状态估计、数据关联、场景判别与轨迹维护，以保证复杂交通工况下跟踪结果的连续性、身份一致性和稳定性。
+
+具体地，本章针对单向双车道地磁事件流条件下的在线多车辆跟踪问题，围绕车辆状态估计、数据关联、场景判别与轨迹管理四个关键环节提出相应方法。首先，建立面向事件流量测的车辆运动模型与观测模型，给出状态初始化、预测与更新方法，为在线递推提供统一的状态表达。其次，考虑不同节点在检测精度、触发概率和噪声水平上的差异，引入节点级检测概率与杂波强度的自适应估计，并构造融合检测概率、量测似然和杂波强度的关联代价，以提高复杂工况下的数据关联鲁棒性。然后，针对单车邻道干扰引起的双侧同时触发与真实双车并行通过在观测上容易混淆的问题，设计场景概率判别与固定滞后窗口回放机制，实现对节点参数后验、场景后验和轨迹状态的协同修正，从而增强算法对复杂交通交互情形的区分能力。最后，结合轨迹起始、维持、删除以及车道状态更新策略，形成完整的在线跟踪流程，并通过仿真与实测数据验证所提方法的有效性，以提升双车道场景下多车辆轨迹输出的连续性、稳定性和身份一致性。
+
+\section{基于双车道地磁传感器数据的车辆状态估计算法}
+\label{sec:ch3_state_estimation}
+
+
+
+\subsection{事件流时序组织}
+
+车辆运动模型的建立是实现车辆目标跟踪的基础，只有给出与量测形式一致的状态表达和观测表达，后续才能围绕预测、关联和更新构造统一的在线递推框架。由于地磁传感器只能在离散观测点产生触发记录，无法直接给出车辆横向连续位置，因此本文仅对车辆沿道路纵向的连续状态进行递推估计，当只考虑沿车辆 行驶方向（x 轴）上的移动时，表现为已知关于车辆目标经过各个传感器时的检测时间序列，对车辆在 轴上的运动状态进行估计；而将横向安装位置、边界车道线编号和地磁峰值等信息作为离散证据保留，用于后续的数据关联与车道状态判别。模型所使用的道路坐标系与第2章中给出的双车道部署坐标系保持一致。
+车辆在道路中行驶，是一个 相对受限的环境，车辆经过相邻地磁传感器时的运动可以看作线性运动，且车辆经 过相邻地磁传感器时的时间间隔较短（一般在 0.5~2s 左右），我们采用xx运动模型作为基础框架，
+
+
+
+//看一下符号解释了没
+设轨迹 $i$ 上一次有效更新对应的时刻为 $t_{i,k-1}$，其后验状态均值与协方差分别记为
+\begin{equation}
+	\hat{\mathbf x}_{i,k-1|k-1},\qquad
+	\mathbf P_{i,k-1|k-1},
+	\label{eq:ch3_prev_state}
+\end{equation}
+其中
+\begin{equation}
+	\hat{\mathbf x}_{i,k-1|k-1}=
+	\begin{bmatrix}
+		\hat p_{i,k-1|k-1}\\
+		\hat v_{i,k-1|k-1}
+	\end{bmatrix}.
+	\label{eq:ch3_prev_state_vec}
+\end{equation}
+对任意候选事件 $\mathbf z_j$，记其触发节点为 $b_j=id_j$，对应节点纵向坐标为 $x_{b_j}$。若轨迹 $i$ 在当前时刻可能继续前进至该节点，则由常速度模型可得到其预测到达时刻
+\begin{equation}
+	\hat t_{i\rightarrow b_j}
+	=
+	t_{i,k-1}
+	+
+	\frac{x_{b_j}-\hat p_{i,k-1|k-1}}{\hat v_{i,k-1|k-1}},
+	\label{eq:ch3_pred_time}
+\end{equation}
+其中，$\hat t_{i\rightarrow b_j}$ 表示轨迹 $i$ 预测通过节点 $b_j$ 的时刻。于是，事件 $\mathbf z_j$ 与轨迹 $i$ 之间的时间残差定义为
+\begin{equation}
+	\nu^{t}_{i,j}
+	=
+	t_j-\hat t_{i\rightarrow b_j}.
+	\label{eq:ch3_time_residual}
+\end{equation}
+
+为构造时间域门控与似然，还需要给出该时间残差的方差。由式~\eqref{eq:ch3_pred_time} 对状态的一阶线性化可得雅可比向量
+\begin{equation}
+	\mathbf J_{i,j}
+	=
+	\begin{bmatrix}
+		-\dfrac{1}{\hat v_{i,k-1|k-1}}
+		&
+		-\dfrac{x_{b_j}-\hat p_{i,k-1|k-1}}{\hat v_{i,k-1|k-1}^{\,2}}
+	\end{bmatrix},
+	\label{eq:ch3_time_jacobian}
+\end{equation}
+从而时间残差方差写为
+\begin{equation}
+	S^{t}_{i,j}
+	=
+	\mathbf J_{i,j}\mathbf P_{i,k-1|k-1}\mathbf J_{i,j}^{\mathrm T}
+	+
+	\sigma_{t,b_j}^2,
+	\label{eq:ch3_time_var}
+\end{equation}
+其中，$\sigma_{t,b_j}^2$ 为节点 $b_j$ 的时间戳误差方差。于是，可定义基于时间残差的归一化距离
+\begin{equation}
+	d^{t\,2}_{i,j}
+	=
+	\frac{(\nu^{t}_{i,j})^2}{S^{t}_{i,j}},
+	\label{eq:ch3_time_maha}
+\end{equation}
+并据此完成事件搜索、门控和关联似然计算。由此可见，在本文系统中，轨迹关联的核心依据是“预测触发时间”与“实际触发时间”的一致性，而不是直接比较位置戳。
+
+当事件 $\mathbf z_j$ 最终被关联到轨迹 $i$ 时，记该事件对应轨迹 $i$ 的第 $k$ 次有效更新，则其时间间隔为
+\begin{equation}
+	\Delta t_{i,k}=t_j-t_{i,k-1}.
+	\label{eq:ch3_dt_update}
+\end{equation}
+先将轨迹状态传播到事件触发时刻：
+\begin{equation}
+	\hat{\mathbf x}_{i,k|k-1}
+	=
+	\mathbf F(\Delta t_{i,k})\hat{\mathbf x}_{i,k-1|k-1},
+	\label{eq:ch3_predict_state}
+\end{equation}
+\begin{equation}
+	\mathbf P_{i,k|k-1}
+	=
+	\mathbf F(\Delta t_{i,k})
+	\mathbf P_{i,k-1|k-1}
+	\mathbf F^{\mathrm T}(\Delta t_{i,k})
+	+
+	\mathbf Q(\Delta t_{i,k}),
+	\label{eq:ch3_predict_cov}
+\end{equation}
+其中，$\mathbf F(\Delta t_{i,k})$ 和 $\mathbf Q(\Delta t_{i,k})$ 分别由前述状态转移模型和过程噪声模型给出。
+
+在关联已经确定的条件下，事件 $\mathbf z_j$ 实际上提供了一条明确的几何约束：车辆在时刻 $t_j$ 经过了已知节点 $b_j$，因此其纵向位置应等于该节点的纵向安装坐标 $x_{b_j}$。基于这一事实，定义伪位置观测
+\begin{equation}
+	\tilde p_{i,k}=x_{b_j}.
+	\label{eq:ch3_pseudo_meas}
+\end{equation}
+于是，关联成立后的状态更新可写为线性观测模型
+\begin{equation}
+	\tilde p_{i,k}
+	=
+	\mathbf H\mathbf x_{i,k}
+	+
+	e_{i,k},
+	\qquad
+	\mathbf H=
+	\begin{bmatrix}
+		1 & 0
+	\end{bmatrix},
+	\qquad
+	e_{i,k}\sim\mathcal N(0,R_{b_j}),
+	\label{eq:ch3_measurement_k}
+\end{equation}
+其中，$\mathbf H$ 为观测矩阵，用于从状态向量中提取纵向位置分量；$e_{i,k}$ 为位置观测噪声；$R_{b_j}$ 为与节点 $b_j$ 相关的观测方差。注意，$R_{b_j}$ 反映的是“节点触发区间宽度、安装标定误差及节点状态不稳定性”折算到位置约束上的不确定性，而不是时间戳误差方差。不同于将 $R$ 视为全局常数的做法，本文将在后文根据节点检测概率后验与节点杂波强度后验自适应调整 $R_{b_j}$，使观测不确定性与节点工作状态保持一致。
+
+\subsection{状态初始化、预测与量测更新}
+
+地磁单点量测只能提供离散观测位置和触发时刻，无法由单条量测直接可靠估计速度。因此，本文采用两步初始化策略。当未被任何已确认轨迹吸收的量测首次触发新候选轨迹时，仅初始化位置状态：
+\begin{equation}
+	\mathbf x_0^-=
+	\begin{bmatrix}
+		x_{id_{j_1}}\\
+		\bar v_0
+	\end{bmatrix},
+	\label{eq:ch3_init_state_v2}
+\end{equation}
+其中，$\bar v_0$ 为道路历史平均速度或经验初值。待该候选轨迹获得第二条满足运动学一致性的量测 $\mathbf z_{j_2}$ 后，再采用两点差分完成速度初始化：
+\begin{equation}
+	v_0=
+	\frac{x_{id_{j_2}}-x_{id_{j_1}}}{t_{j_2}-t_{j_1}}.
+	\label{eq:ch3_init_velocity_v2}
+\end{equation}
+对应的初始协方差取为
+\begin{equation}
+	\mathbf P_0=\mathrm{diag}(\sigma_{p0}^2,\sigma_{v0}^2),
+	\qquad
+	\sigma_{v0}^2=\frac{2\sigma_{p0}^2}{(t_{j_2}-t_{j_1})^2}.
+	\label{eq:ch3_P0_v2}
+\end{equation}
+
+对于任意一条活动轨迹，当处理时刻为 $t_j$ 的候选量测时，先将上一时刻后验状态传播到当前量测时刻：
+\begin{equation}
+	\hat{\mathbf x}^-_t(t_j)=\mathbf F(\Delta t_{t,j})\hat{\mathbf x}_{t}^{+}(t_t^{\mathrm{last}}),
+	\label{eq:ch3_predict_state_event}
+\end{equation}
+\begin{equation}
+	\mathbf P^-_t(t_j)=\mathbf F(\Delta t_{t,j})\mathbf P_t^{+}(t_t^{\mathrm{last}})\mathbf F^{\mathrm T}(\Delta t_{t,j})+\mathbf Q(\Delta t_{t,j}),
+	\label{eq:ch3_predict_cov_event}
+\end{equation}
+其中，$t_t^{\mathrm{last}}$ 为轨迹 $t$ 上一次被更新的物理时刻，$\Delta t_{t,j}=t_j-t_t^{\mathrm{last}}$。这样，同一扫描内的不同量测虽然属于同一缓冲集合，但它们对应的状态预测时刻并不相同，从而避免了将同窗事件当作同一时刻观测处理的时间一致性错误。
+
+若轨迹 $t$ 最终被分配到量测 $y_j$，则 Kalman 增益为
+\begin{equation}
+	\mathbf K_{t,j}=\mathbf P^-_t(t_j)\mathbf H^{\mathrm T}
+	\left(\mathbf H\mathbf P^-_t(t_j)\mathbf H^{\mathrm T}+R_{b_j}\right)^{-1},
+	\label{eq:ch3_K_v2}
+\end{equation}
+相应的状态和协方差更新写为
+\begin{equation}
+	\hat{\mathbf x}^+_t(t_j)=\hat{\mathbf x}^-_t(t_j)+\mathbf K_{t,j}\left(y_j-\mathbf H\hat{\mathbf x}^-_t(t_j)\right),
+	\label{eq:ch3_update_state_v2}
+\end{equation}
+\begin{equation}
+	\mathbf P^+_t(t_j)=\left(\mathbf I-\mathbf K_{t,j}\mathbf H\right)\mathbf P^-_t(t_j).
+	\label{eq:ch3_update_cov_v2}
+\end{equation}
+若轨迹在当前扫描内未获得有效关联，则不执行式~\eqref{eq:ch3_update_state_v2}--\eqref{eq:ch3_update_cov_v2}，而是仅保留预测结果，并将该未检出信息送入后续的目标存在概率和节点后验递推。由此，本节建立了以物理时间为核心的事件级状态递推形式，为后续标准化关联和轨迹管理提供统一基础。
+
+\section{节点状态自适应与关联算法设计}
+\label{sec:ch3_association}
+
+\subsection{门控、量测似然与标准化关联权重}
+\label{subsec:ch3_assoc_weight}
+
+为了使关联代价在不同车流密度和杂波条件下具有可比性，本文不再直接使用经验打分，而是采用显式包含检测概率 $p_D$、量测似然 $g(z|x)$ 和节点杂波强度 $\kappa(z)$ 的标准化关联似然比。对轨迹 $t$ 与候选量测 $\mathbf z_j$，先构造运动学残差
+\begin{equation}
+	\nu_{t,j}=y_j-\mathbf H\hat{\mathbf x}^-_t(t_j),
+	\label{eq:ch3_innovation_v2}
+\end{equation}
+对应的创新方差为
+\begin{equation}
+	S_{t,j}=\mathbf H\mathbf P^-_t(t_j)\mathbf H^{\mathrm T}+R_{b_j},
+	\label{eq:ch3_S_v2}
+\end{equation}
+据此定义马氏距离
+\begin{equation}
+	d_{t,j}^2=\frac{\nu_{t,j}^2}{S_{t,j}}.
+	\label{eq:ch3_maha_v2}
+\end{equation}
+当 $d_{t,j}^2\le \gamma$ 时，认为量测 $\mathbf z_j$ 落入轨迹 $t$ 的验证门内。由于位置观测是一维量，轨迹 $t$ 的门控体积可写为
+\begin{equation}
+	V_t=2\sqrt{\gamma S_{t,j}}.
+	\label{eq:ch3_gate_volume}
+\end{equation}
+门控概率记为 $P_G=\Pr\{d^2\le \gamma\}$。
+
+在门控通过的基础上，定义事件级量测似然为
+\begin{equation}
+	g(\mathbf z_j\mid \hat{\mathbf x}^-_t(t_j),s_n)
+	=
+	g_{t,j}^{\mathrm{kin}}
+	\phi_{t,j}^{\mathrm{mag}}
+	\phi_{t,j}^{\mathrm{lane,scene}},
+	\label{eq:ch3_g_total}
+\end{equation}
+其中，$g_{t,j}^{\mathrm{kin}}$ 为运动学高斯密度，$\phi_{t,j}^{\mathrm{mag}}$ 和 $\phi_{t,j}^{\mathrm{lane,scene}}$ 分别为磁特征兼容因子和车道/场景兼容因子。具体而言，
+\begin{equation}
+	g_{t,j}^{\mathrm{kin}}
+	=
+	\frac{1}{\sqrt{2\pi S_{t,j}}}
+	\exp\left(-\frac{1}{2}d_{t,j}^2\right),
+	\label{eq:ch3_g_kin}
+\end{equation}
+磁特征兼容因子采用轨迹历史对数磁峰值统计建模：
+\begin{equation}
+	\phi_{t,j}^{\mathrm{mag}}
+	=
+	\exp\left[
+	-\frac{\left(\log(Mpeak_j+\varepsilon_M)-\mu_{t}^{M}\right)^2}
+	{2\left((\sigma_t^{M})^2+\varepsilon_M\right)}
+	\right],
+	\label{eq:ch3_phi_mag}
+\end{equation}
+其中，$\mu_t^{M}$ 和 $(\sigma_t^{M})^2$ 分别为轨迹 $t$ 的对数磁峰值均值和方差。车道/场景兼容因子定义为
+\begin{equation}
+	\phi_{t,j}^{\mathrm{lane,scene}}
+	=
+	\sum_{\beta\in\{1,2\}}
+	p\!\left(\ell_j\middle|\beta,\boldsymbol\pi_{t,n}^{\mathrm{scene}}\right)
+	\pi_{t,n}^{\mathrm{lane}}(\beta),
+	\label{eq:ch3_phi_lane_scene}
+\end{equation}
+其中，$\boldsymbol\pi_{t,n}^{\mathrm{scene}}$ 为轨迹当前场景后验，$\pi_{t,n}^{\mathrm{lane}}(\beta)$ 为轨迹车道状态后验。
+
+记节点 $b_j$ 在扫描 $n$ 开始时冻结的检测概率后验均值和杂波强度后验均值分别为 $\hat p_D^{(b_j)}(n^-)$ 与 $\hat \kappa_{b_j}(n^-)$，则标准化关联似然比定义为
+\begin{equation}
+	\Lambda_{t,j}(n)
+	=
+	\frac{\hat p_D^{(b_j)}(n^-)\,g(\mathbf z_j\mid \hat{\mathbf x}^-_t(t_j),s_n)}{\hat \kappa_{b_j}(n^-)}.
+	\label{eq:ch3_lambda_assoc}
+\end{equation}
+若实际实现中采用的是门内期望杂波数而非单位测量空间杂波强度，则可将式~\eqref{eq:ch3_lambda_assoc} 等价改写为
+\begin{equation}
+	\Lambda_{t,j}(n)
+	=
+	\frac{\hat p_D^{(b_j)}(n^-)\,g(\mathbf z_j\mid \hat{\mathbf x}^-_t(t_j),s_n)\,V_t}{\hat c_{b_j,t}(n^-)},
+	\qquad
+	\hat c_{b_j,t}(n^-)=\hat \kappa_{b_j}(n^-)V_t,
+	\label{eq:ch3_lambda_assoc_gate}
+\end{equation}
+从而将门控体积显式并入关联比值。这一表达使得检测概率、量测一致性和杂波水平能够在统一尺度下进入代价函数，避免车流密度变化时仅靠经验权重导致的系统偏差。
+
+在轨迹 $t$ 的验证门内，进一步构造 PDA 风格的局部软关联权重。记轨迹 $t$ 在扫描 $n$ 的候选量测集合为 $\mathcal G_t(n)$，则对任一 $\mathbf z_j\in\mathcal G_t(n)$，定义
+\begin{equation}
+	\beta_{t,j}(n)
+	=
+	\frac{\Lambda_{t,j}(n)}{1-\bar p_{D,t}(n)P_G+\sum_{\mathbf z_\ell\in \mathcal G_t(n)}\Lambda_{t,\ell}(n)},
+	\label{eq:ch3_beta_soft}
+\end{equation}
+对应的未检出权重为
+\begin{equation}
+	\beta_{t,0}(n)
+	=
+	\frac{1-\bar p_{D,t}(n)P_G}{1-\bar p_{D,t}(n)P_G+\sum_{\mathbf z_\ell\in \mathcal G_t(n)}\Lambda_{t,\ell}(n)},
+	\label{eq:ch3_beta_miss}
+\end{equation}
+其中，$\bar p_{D,t}(n)$ 表示轨迹 $t$ 在当前扫描预测对应节点上的检测概率。式~\eqref{eq:ch3_beta_soft}--\eqref{eq:ch3_beta_miss} 给出了局部关联证据的归一化形式。为保持现有代码中“全局分配+局部补关联”的骨架不变，本文仍使用硬分配结果驱动滤波更新，而将软关联权重主要用于节点后验统计、目标存在概率更新和场景判别的证据融合。这样既保持了工程实现的连续性，又使统计更新获得了明确的概率语义。
+
+基于式~\eqref{eq:ch3_lambda_assoc}，全局一测一轨分配代价定义为
+\begin{equation}
+	C_{t,j}(n)=-\log \Lambda_{t,j}(n).
+	\label{eq:ch3_cost_v2}
+\end{equation}
+于是，第 $n$ 次扫描的全局分配问题可写为
+\begin{equation}
+	\min_{\mathbf X_n}
+	\sum_{t\in\mathcal T_n}\sum_{\mathbf z_j\in Z_n}
+	x_{t,j}(n)C_{t,j}(n),
+	\label{eq:ch3_assignment_v2}
+\end{equation}
+其中，$x_{t,j}(n)\in\{0,1\}$ 表示量测 $\mathbf z_j$ 是否被分配给轨迹 $t$。式~\eqref{eq:ch3_assignment_v2} 由现有代码中的全局分配器完成求解。主分配器未吸收但仍满足局部门控条件的量测，再由局部近邻补关联模块进行二次判别。
+
+\subsection{节点检测概率与节点杂波强度的在线更新}
+\label{subsec:ch3_node_stats}
+
+为了避免“当前关联结果一边依赖节点后验、一边又立即反过来更新节点后验”所带来的循环依赖问题，本文采用两阶段更新策略。具体而言，扫描 $n$ 内的关联计算统一使用窗口起点冻结的节点参数，记为
+\begin{equation}
+	\Theta_n^{-}=\left\{\hat p_D^{(b)}(n^-),\hat \kappa_b(n^-): b\in\mathcal B\right\},
+	\label{eq:ch3_theta_frozen}
+\end{equation}
+其中，$\mathcal B$ 为全体节点集合。只有当某一历史扫描在固定滞后窗口回放结束后被“定稿”并不再参与后续回放时，才利用该扫描的软关联权重更新节点后验。由此，节点参数更新与当前扫描关联求解在时间上被显式分离，从而避免同一扫描内的自反馈放大。
+
+对每个节点 $b$，维护检测概率的 Beta 先验
+\begin{equation}
+	p_D^{(b)}\sim \mathrm{Beta}(\alpha_{D,b},\beta_{D,b}),
+	\label{eq:ch3_beta_prior_v2}
+\end{equation}
+以及杂波强度的 Gamma 先验
+\begin{equation}
+	\kappa_b\sim \mathrm{Gamma}(a_{\kappa,b},b_{\kappa,b}),
+	\label{eq:ch3_gamma_prior_v2}
+\end{equation}
+其中，Gamma 分布采用“形状—率”参数化，其数学期望为
+\begin{equation}
+	\mathbb E[\kappa_b]=\frac{a_{\kappa,b}}{b_{\kappa,b}}.
+	\label{eq:ch3_kappa_mean}
+\end{equation}
+
+设在扫描 $m$ 完成固定滞后回放并最终定稿后，定义节点 $b$ 的高置信期望通过轨迹集合为 $\mathcal E_b(m)$。集合中的轨迹满足：其存在概率超过阈值 $\tau_E$，并且按预测状态在扫描 $m$ 内与节点 $b$ 的纵向位置具有可达一致性。记轨迹 $t\in\mathcal E_b(m)$ 对节点 $b$ 的通过机会指示为
+\begin{equation}
+	\omega_{t,b}(m)=
+	\mathbb I\left\{
+	\left|x_b-\hat p_t^{-}(m)\right|\le \sqrt{\gamma S_{t,b}(m)}
+	\right\},
+	\label{eq:ch3_pass_indicator}
+\end{equation}
+其中，$x_b$ 为节点 $b$ 的纵向位置，$\hat p_t^{-}(m)$ 为轨迹 $t$ 在扫描 $m$ 中对应时刻的预测纵向位置。
+
+基于局部软关联权重，节点 $b$ 在扫描 $m$ 的软命中计数和软期望计数分别定义为
+\begin{equation}
+	N_{\mathrm{hit}}^{(b)}(m)
+	=
+	\sum_{t\in\mathcal E_b(m)}
+	\omega_{t,b}(m)
+	\sum_{\mathbf z_j\in Z_m: id_j=b}
+	\beta_{t,j}(m),
+	\label{eq:ch3_soft_hit}
+\end{equation}
+\begin{equation}
+	N_{\mathrm{exp}}^{(b)}(m)
+	=
+	\sum_{t\in\mathcal E_b(m)}\omega_{t,b}(m).
+	\label{eq:ch3_soft_exp}
+\end{equation}
+于是，节点检测概率的后验递推写为
+\begin{equation}
+	\alpha_{D,b}(m)
+	=
+	\lambda_D\alpha_{D,b}(m-1)+N_{\mathrm{hit}}^{(b)}(m),
+	\qquad
+	\beta_{D,b}(m)
+	=
+	\lambda_D\beta_{D,b}(m-1)+N_{\mathrm{exp}}^{(b)}(m)-N_{\mathrm{hit}}^{(b)}(m),
+	\label{eq:ch3_beta_update_v2}
+\end{equation}
+其中，$\lambda_D\in(0,1]$ 为遗忘因子。对应的检测概率后验均值为
+\begin{equation}
+	\hat p_D^{(b)}(m)=
+	\frac{\alpha_{D,b}(m)}{\alpha_{D,b}(m)+\beta_{D,b}(m)}.
+	\label{eq:ch3_pD_mean_v2}
+\end{equation}
+
+对于节点杂波强度，利用“未被任何轨迹解释”的软剩余概率构造软杂波计数：
+\begin{equation}
+	N_{\mathrm{clu}}^{(b)}(m)
+	=
+	\sum_{\mathbf z_j\in Z_m:id_j=b}
+	\left[
+	1-\sum_{t\in\mathcal E_b(m)}\beta_{t,j}(m)
+	\right].
+	\label{eq:ch3_soft_clutter}
+\end{equation}
+为保证强度估计与门控范围匹配，取节点 $b$ 在扫描 $m$ 内的总暴露门控体积为
+\begin{equation}
+	V_b(m)
+	=
+	\sum_{t\in\mathcal E_b(m)}
+	\omega_{t,b}(m)V_t(m).
+	\label{eq:ch3_exposure_volume}
+\end{equation}
+于是，节点杂波强度的后验递推写为
+\begin{equation}
+	a_{\kappa,b}(m)
+	=
+	\lambda_{\kappa}a_{\kappa,b}(m-1)+N_{\mathrm{clu}}^{(b)}(m),
+	\qquad
+	b_{\kappa,b}(m)
+	=
+	\lambda_{\kappa}b_{\kappa,b}(m-1)+V_b(m),
+	\label{eq:ch3_kappa_update}
+\end{equation}
+对应的杂波强度后验均值为
+\begin{equation}
+	\hat \kappa_b(m)=\frac{a_{\kappa,b}(m)}{b_{\kappa,b}(m)}.
+	\label{eq:ch3_kappa_mean_v2}
+\end{equation}
+
+式~\eqref{eq:ch3_beta_update_v2}--\eqref{eq:ch3_kappa_mean_v2} 具有三点性质。第一，软计数 $\beta_{t,j}(m)$ 用于替代硬命中/硬虚警计数，避免早期误关联直接污染节点统计；第二，节点检测概率和节点杂波强度都仅由已经定稿的历史扫描更新，不会反向改变同一扫描的关联决策；第三，检测概率采用 Beta--Bernoulli 建模，杂波采用 Gamma--Poisson 建模，使“真实通过未检出”和“无解释触发过多”在统计语义上被明确区分，从而提高可辨识性。
+
+节点相关观测方差进一步定义为
+\begin{equation}
+	R_b(n)=R_0\left[1+c_D\left(1-\hat p_D^{(b)}(n)\right)+c_{\kappa}\hat \kappa_b(n)\right],
+	\label{eq:ch3_Rb_v2}
+\end{equation}
+其中，$R_0$ 为基准观测方差，$c_D$ 和 $c_{\kappa}$ 为调节系数。式~\eqref{eq:ch3_Rb_v2} 表明：当节点检测概率下降或节点杂波强度升高时，观测噪声方差自动增大，从而降低该节点量测对状态更新的牵引强度。
+
+\subsection{邻道干扰与双车并行三状态场景判别}
+\label{subsec:ch3_scene_hmm_v2}
+
+现有规则系统在区分邻道干扰与双车并行时，通常依赖单次时间差阈值和磁峰值比值。但在真实道路中确实存在少量“两车长时间并行且相对时间差持续较小”的情况，此时若仅依靠单帧规则，容易将真实双车并行误判为邻道干扰。为此，本文显式引入场景状态变量
+\begin{equation}
+	s_n\in\left\{\mathcal I_1,\mathcal I_2,\mathcal P\right\},
+	\label{eq:ch3_scene_state_v2}
+\end{equation}
+其中，$\mathcal I_1$ 表示“1车道真实车辆、2车道为邻道干扰”，$\mathcal I_2$ 表示“2车道真实车辆、1车道为邻道干扰”，$\mathcal P$ 表示“真实双车并行”。记场景后验概率向量为
+\begin{equation}
+	\boldsymbol\pi_n=
+	\begin{bmatrix}
+		\pi_n(\mathcal I_1) &
+		\pi_n(\mathcal I_2) &
+		\pi_n(\mathcal P)
+	\end{bmatrix}.
+	\label{eq:ch3_scene_vector_v2}
+\end{equation}
+采用一阶马尔可夫模型描述场景转移：
+\begin{equation}
+	\boldsymbol\pi_{n|n-1}=\boldsymbol\pi_{n-1|n-1}\mathbf A_s,
+	\label{eq:ch3_scene_predict_v2}
+\end{equation}
+其中，
+\begin{equation}
+	\mathbf A_s=
+	\begin{bmatrix}
+		1-\lambda_c-\rho_{1P} & \lambda_c & \rho_{1P}\\
+		\lambda_c & 1-\lambda_c-\rho_{2P} & \rho_{2P}\\
+		\rho_{P1} & \rho_{P2} & 1-\rho_{P1}-\rho_{P2}
+	\end{bmatrix}.
+	\label{eq:ch3_As_v2}
+\end{equation}
+其中，$\lambda_c$ 为单步场景转移概率，$\rho_{1P},\rho_{2P},\rho_{P1},\rho_{P2}$ 分别表示单车干扰场景转入双车并行场景以及双车并行场景退化为单车干扰场景的概率。
+
+在观测层面，本文提取如下场景观测向量：
+\begin{equation}
+	\mathbf o_n=
+	\begin{bmatrix}
+		\Delta t_n^{\mathrm{adj}} &
+		\alpha_n &
+		e_n^{\mathrm{opp}} &
+		d_{n,\mathrm{opp}}^2
+	\end{bmatrix}^{\mathrm T},
+	\label{eq:ch3_scene_obs_v2}
+\end{equation}
+其中，$\Delta t_n^{\mathrm{adj}}$ 为同编号两侧节点触发时间差，$\alpha_n$ 为两侧磁峰值对数比值，$e_n^{\mathrm{opp}}\in\{0,1\}$ 表示邻道是否在给定时间邻域内存在触发，$d_{n,\mathrm{opp}}^2$ 表示对侧触发被邻道现有轨迹解释的最小马氏距离：
+\begin{equation}
+	d_{n,\mathrm{opp}}^2=
+	\min_{t\in\mathcal T_{\mathrm{opp}}(n)}
+	\frac{\left(y_n^{\mathrm{opp}}-\hat y^-_t(t_n^{\mathrm{opp}})\right)^2}{S_t(t_n^{\mathrm{opp}})}.
+	\label{eq:ch3_dopp_v2}
+\end{equation}
+当对侧不存在可解释轨迹时，令 $d_{n,\mathrm{opp}}^2=d_0^2$，其中 $d_0^2$ 为较大的常数。
+
+为兼顾表达能力与实现复杂度，采用条件独立近似构造场景观测似然：
+\begin{equation}
+	p(\mathbf o_n\mid s_n)=
+	p(\Delta t_n^{\mathrm{adj}}\mid s_n)
+	p(\alpha_n\mid s_n)
+	p(e_n^{\mathrm{opp}}\mid s_n)
+	p(d_{n,\mathrm{opp}}^2\mid s_n).
+	\label{eq:ch3_scene_likelihood_v2}
+\end{equation}
+其中，磁峰值比项采用高斯模型：
+\begin{equation}
+	\alpha_n\mid \mathcal I_1\sim\mathcal N(\mu_\alpha,\sigma_\alpha^2),\qquad
+	\alpha_n\mid \mathcal I_2\sim\mathcal N(-\mu_\alpha,\sigma_\alpha^2),\qquad
+	\alpha_n\mid \mathcal P\sim\mathcal N(0,\sigma_P^2).
+	\label{eq:ch3_alpha_model_v2}
+\end{equation}
+对侧触发存在性项在真实双车并行场景下更接近节点检测事件，在邻道干扰场景下更接近杂波触发，因此定义
+\begin{equation}
+	p(e_n^{\mathrm{opp}}=1\mid \mathcal P)=\hat p_D^{(b_{\mathrm{opp}})}(n^-),
+	\qquad
+	p(e_n^{\mathrm{opp}}=1\mid \mathcal I_1)=p(e_n^{\mathrm{opp}}=1\mid \mathcal I_2)=1-\exp\left[-\hat \kappa_{b_{\mathrm{opp}}}(n^-)V_{\mathrm{opp}}\right],
+	\label{eq:ch3_eopp_model_v2}
+\end{equation}
+其中，$V_{\mathrm{opp}}$ 为对侧节点对应的门控体积。对侧可解释性项定义为
+\begin{equation}
+	p(d_{n,\mathrm{opp}}^2\mid \mathcal P)\propto \exp\left(-\frac{d_{n,\mathrm{opp}}^2}{2}\right),
+	\qquad
+	p(d_{n,\mathrm{opp}}^2\mid \mathcal I_1)\propto 1-\exp\left(-\frac{d_{n,\mathrm{opp}}^2}{2}\right),
+	\label{eq:ch3_dopp_model_v2}
+\end{equation}
+对 $\mathcal I_2$ 采用同样形式。由此，场景状态后验按 Bayes 规则递推为
+\begin{equation}
+	\pi_{n|n}(s)=
+	\frac{p(\mathbf o_n\mid s)\pi_{n|n-1}(s)}{\sum_{s'\in\{\mathcal I_1,\mathcal I_2,\mathcal P\}}p(\mathbf o_n\mid s')\pi_{n|n-1}(s')}.
+	\label{eq:ch3_scene_update_v2}
+\end{equation}
+式~\eqref{eq:ch3_scene_update_v2} 的关键作用在于：它不再依赖单帧时间差阈值，而是利用多步时序证据判断“对侧触发究竟更像是邻道杂波，还是更像是另一条真实轨迹的连续观测”。
+
+\subsection{固定滞后窗口回放与一致性维护}
+\label{subsec:ch3_replay_v2}
+
+尽管系统主干采用单扫描在线关联，但少量迟到到达和局部误关联仍可能导致当前轨迹状态与后续量测不一致。考虑到这类问题通常集中在最近若干扫描内，本文采用固定滞后窗口回放机制进行有限修正。设回放窗口长度为 $L$，则第 $n$ 次扫描对应的窗口为
+\begin{equation}
+	W_n=\{Z_{n-L+1},Z_{n-L+2},\ldots,Z_n\}.
+	\label{eq:ch3_window_v2}
+\end{equation}
+为保证回放结果与处理顺序无关，窗口起点处需要同时快照以下量：
+\begin{equation}
+	\mathcal S_{n-L}=
+	\left\{
+	\hat{\mathbf x}_t,\mathbf P_t,\gamma_t,\boldsymbol\pi_t^{\mathrm{lane}},\boldsymbol\pi_t^{\mathrm{scene}},\alpha_{D,b},\beta_{D,b},a_{\kappa,b},b_{\kappa,b}
+	\right\},
+	\label{eq:ch3_snapshot}
+\end{equation}
+其中，前五项分别为轨迹状态、协方差、存在概率、车道后验和场景后验，后四项为节点检测概率与节点杂波强度的后验参数。这样，当窗口内任一扫描被重新处理时，轨迹状态、节点后验和场景后验都能够从同一历史快照出发重新生成，避免回放过程中历史节点参数改变而破坏结果可复现性。
+
+当出现以下两类情况之一时触发局部回放：
+\begin{enumerate}
+	\item 新到达量测按触发时间应归属于窗口内某一历史扫描；
+	\item 某一局部邻道竞争关系在最近扫描内出现明显的场景后验翻转，表明历史若干步的关联解释可能不一致。
+\end{enumerate}
+回放过程从快照 $\mathcal S_{n-L}$ 开始，按触发时间顺序重新执行“事件级预测—场景判别—标准化关联—滤波更新—软计数统计—轨迹管理”流程。只有当窗口最早端的扫描 $Z_{n-L+1}$ 在新一轮回放后不再可能被更早迟到量测影响时，才用其软计数更新节点后验参数，并将其从活动窗口中移出。由此，窗口内的关联与节点后验更新始终保持同一顺序和同一基准，不会因处理顺序不同而得到不同结果。
+
+需要说明的是，固定滞后窗口并不旨在解决长时间连续缺测问题。当连续缺测长度超过窗口承载能力和轨迹维持阈值时，系统仍会产生轨迹碎片，此类问题将在第~4~章中进一步处理。第~3~章负责在固定窗口内尽可能维持短间断轨迹的身份一致性，第~4~章则负责在超过该窗口后对轨迹片段进行更长时间尺度的重建。
+
+\section{轨迹管理}
+\label{sec:ch3_track_management}
+
+\subsection{轨迹起始与确认}
+
+当扫描 $n$ 中存在未被任何已确认轨迹吸收的量测，或者其与所有已确认轨迹的关联似然比均低于阈值 $\Lambda_{\min}$ 时，系统以该量测触发新候选轨迹。候选轨迹仅记录首条量测、初始车道证据和初始场景上下文，不立即输出。为抑制杂波触发假轨迹，本文采用 $M/N$ 确认策略：若候选轨迹在最近 $N$ 个扫描内获得至少 $M$ 次有效关联，且其平均关联似然比不低于给定阈值，则转为已确认轨迹；否则在超过 $N$ 个扫描仍未满足条件时予以删除。
+
+与仅依赖计数的规则不同，本文对候选轨迹的确认同时考察运动学一致性、节点可靠性和场景一致性。当候选轨迹主要由高杂波节点触发，或其长期处于“邻道干扰概率占优”的场景后验下时，即使短时获得若干次命中，也不会立即提升为已确认状态。只有当其在多步时序上能稳定维持较高的关联似然比和存在概率时，才执行确认。这一设计能够有效抑制由邻道串扰触发的短假轨迹。
+
+\subsection{目标存在概率更新与删除策略}
+
+为避免轨迹因单次未检出而立即终止，本文显式维护每条轨迹的存在概率 $\gamma_{t,n}$。设轨迹 $t$ 在第 $n$ 次扫描前的存在概率预测值为 $\gamma_{t,n|n-1}$，则其递推写为
+\begin{equation}
+	\gamma_{t,n|n-1}=p_S\gamma_{t,n-1|n-1}+p_B\left(1-\gamma_{t,n-1|n-1}\right),
+	\label{eq:ch3_exist_predict_v2}
+\end{equation}
+其中，$p_S$ 为轨迹存活概率，$p_B$ 为新生概率。
+
+若轨迹 $t$ 在扫描 $n$ 中通过全局分配被分配到量测 $\mathbf z_j$，则用标准化关联似然比完成存在概率更新：
+\begin{equation}
+	\gamma_{t,n|n}=
+	\frac{\Lambda_{t,j}(n)\gamma_{t,n|n-1}}{\Lambda_{t,j}(n)\gamma_{t,n|n-1}+1-\gamma_{t,n|n-1}}.
+	\label{eq:ch3_exist_hit_v2}
+\end{equation}
+若轨迹在当前扫描中未获得有效关联，则利用预测对应节点上的平均检测概率完成未检出更新：
+\begin{equation}
+	\gamma_{t,n|n}=
+	\frac{\left[1-\bar p_{D,t}(n)P_G\right]\gamma_{t,n|n-1}}{\left[1-\bar p_{D,t}(n)P_G\right]\gamma_{t,n|n-1}+1-\gamma_{t,n|n-1}}.
+	\label{eq:ch3_exist_miss_v2}
+\end{equation}
+式~\eqref{eq:ch3_exist_hit_v2} 和式~\eqref{eq:ch3_exist_miss_v2} 表明，存在概率不再依赖固定检测率，而是直接由节点检测概率和标准化关联似然比控制。当节点本身检测能力较弱或当前杂波较强时，未检出对存在概率的打击会自动减轻；当节点检测能力稳定且量测似然比高时，轨迹存在概率会快速提升。
+
+在工程实现中，存在概率与连续漏检计数联合用于轨迹维持与删除。设连续漏检计数为 $N_{\mathrm{miss}}(t)$，则当
+\begin{equation}
+	\gamma_{t,n|n}<\gamma_{\mathrm{del}}
+	\qquad\text{或}\qquad
+	N_{\mathrm{miss}}(t)>N_{\mathrm{del}},
+	\label{eq:ch3_delete_v2}
+\end{equation}
+时，判定轨迹终止。这里，$N_{\mathrm{del}}$ 应与固定滞后窗口长度 $L$ 协同设置：当 $N_{\mathrm{miss}}(t)\le L$ 时，系统优先等待局部回放结果；当连续缺测长度超过 $L$ 且存在概率持续下降时，说明当前在线方法已难以可靠维持身份一致性，此时将轨迹转为轨迹片段并交由第~4~章进一步拼接。
+
+\subsection{车道状态维护与换道判别}
+
+虽然横向连续位置无法直接由地磁系统观测，但量测携带的边界车道线编号仍提供了稳定的离散车道证据。设轨迹 $t$ 在第 $n$ 次扫描时的车道状态为 $c_{t,n}\in\{1,2\}$，其车道后验概率向量记为
+\begin{equation}
+	\boldsymbol\pi_{t,n}^{\mathrm{lane}}=
+	\begin{bmatrix}
+		\pi_{t,n}^{\mathrm{lane}}(1) &
+		\pi_{t,n}^{\mathrm{lane}}(2)
+	\end{bmatrix}.
+	\label{eq:ch3_lane_vector_v2}
+\end{equation}
+预测步采用两状态马尔可夫模型：
+\begin{equation}
+	\boldsymbol\pi_{t,n|n-1}^{\mathrm{lane}}
+	=
+	\boldsymbol\pi_{t,n-1|n-1}^{\mathrm{lane}}
+	\begin{bmatrix}
+		1-p_c & p_c\\
+		p_c & 1-p_c
+	\end{bmatrix},
+	\label{eq:ch3_lane_predict_v2}
+\end{equation}
+其中，$p_c$ 为单步换道概率。
+
+若轨迹 $t$ 在当前扫描中关联到量测 $\mathbf z_j$，则其车道后验按 Bayes 规则更新：
+\begin{equation}
+	\pi_{t,n|n}^{\mathrm{lane}}(\beta)
+	=
+	\frac{p(\ell_j\mid \beta,\boldsymbol\pi_{t,n}^{\mathrm{scene}})\pi_{t,n|n-1}^{\mathrm{lane}}(\beta)}{\sum_{\beta'=1}^{2}p(\ell_j\mid \beta',\boldsymbol\pi_{t,n}^{\mathrm{scene}})\pi_{t,n|n-1}^{\mathrm{lane}}(\beta')},
+	\qquad \beta\in\{1,2\}.
+	\label{eq:ch3_lane_update_v2}
+\end{equation}
+当轨迹未获得关联时，保持预测结果不变。由于式~\eqref{eq:ch3_lane_update_v2} 将场景后验显式纳入车道更新过程，因此系统在邻道高干扰时不会仅凭一次对侧触发就轻易切换车道，而在真实双车并行和稳定换道阶段又能够逐步累积正确证据。
+
+在输出层面，本文采用稳定性优先原则。当某一车道后验概率连续多次超过阈值 $\tau_{\mathrm{lane}}$ 且持续时间超过 $T_{\mathrm{lane}}$ 时，输出该车道；当两车道后验发生持续且显著翻转时，判定换道事件，并将换道时刻对齐到固定滞后窗口提交的最早扫描，以降低单帧波动对换道时刻标注的影响。
+
+\subsection{算法流程汇总}
+
+综合上述各节，本章算法在每个扫描周期的主要处理流程如下：
+\begin{enumerate}
+	\item 将异步事件按时间片 $\Delta T$ 组织为扫描量测集合 $Z_n$，并在扫描内部按触发时间戳升序排列；
+	\item 对所有活动轨迹按每个候选事件的触发时刻执行事件级状态预测，得到 $\hat{\mathbf x}^-_t(t_j)$、$\mathbf P^-_t(t_j)$、$\nu_{t,j}$ 和 $S_{t,j}$；
+	\item 在冻结节点参数 $\Theta_n^{-}$ 条件下，构造标准化关联似然比 $\Lambda_{t,j}(n)$，并计算局部软关联权重 $\beta_{t,j}(n)$；
+	\item 对存在邻道竞争关系的候选对，构造场景观测向量 $\mathbf o_n$ 并递推三状态场景后验；
+	\item 根据代价矩阵 $C_{t,j}(n)=-\log\Lambda_{t,j}(n)$ 执行全局分配，并对剩余量测执行局部补关联；
+	\item 对获得关联的轨迹执行滤波更新，对未获得关联的轨迹保留预测结果，并更新目标存在概率和车道后验；
+	\item 若当前扫描触发固定滞后回放条件，则在窗口内统一回放轨迹状态、场景后验和节点参数；
+	\item 当窗口最早端扫描完成定稿后，利用其软计数更新节点检测概率和节点杂波强度后验；
+	\item 根据 $M/N$ 规则、存在概率阈值和删除阈值完成轨迹起始、确认、维持和删除，同时输出稳定的车道状态与换道标记。
+\end{enumerate}
+
+从实现角度看，上述流程并未推翻现有代码中的全局分配、局部补关联和轨迹管理骨架，而是将其中原本分散在固定概率、经验阈值和多处规则修正中的信息统一为具有明确统计语义的概率量。由此，本章方法既保留了工程可实现性，也满足了硕士论文对理论闭环、可辨识性和方法创新性的要求。
+
+\section{实验设计与分析}
+\label{sec:ch3_experiment}
+
+\subsection{实验目的与验证点}
+
+本章实验围绕“标准化关联的有效性”“节点后验的稳定性”“场景判别能力”“漏检容忍边界”和“在线实时性”五个问题展开，重点验证以下内容：
+\begin{enumerate}
+	\item 显式引入检测概率、量测似然和杂波强度后，关联代价在不同车流密度和杂波水平下是否比规则打分更稳定；
+	\item 节点检测概率与节点杂波强度的“冻结参数—软计数—窗口定稿后更新”策略是否能够避免错误自强化；
+	\item 三状态场景判别是否能够在邻道干扰和真实双车并行场景下减少误关联和车道判别抖动；
+	\item 本章方法对轻度漏检和短连漏检的稳定容忍范围是多少，其失效边界如何自然引出第~4~章的轨迹片段在线聚类；
+	\item 在保持现有系统主干不变的前提下，所提方法是否满足在线运行要求。
+\end{enumerate}
+
+\subsection{数据集、实验平台与预处理}
+
+实地数据采用双车道地磁传感器系统采集的车辆触发事件流。每条事件记录至少包含触发时间戳、设备编号、边界车道线编号和地磁峰值 $Mpeak$ 等字段。为与本章模型一致，首先将异步事件按时间片 $\Delta T$ 组织为扫描量测集合；其次，将设备编号映射到对应的纵向坐标和节点标识；最后，对地磁峰值进行对数变换和按节点归一化，作为磁特征兼容因子的输入。
+
+为了系统验证方法在不同非理想条件下的表现，还需构造可控仿真数据。仿真器沿道路纵向按与实地一致的信标间距布设节点，生成车辆到达过程、纵向运动轨迹和换道行为，并在理想触发时间基础上叠加时间戳抖动、随机漏检、邻道触发和杂波事件。通过仿真数据可以获得完整真值轨迹与真值关联标签，从而精确统计位置误差、ID 切换和轨迹碎片化等指标。
+
+\subsection{对比算法与参数设置}
+
+为客观评估本章方法，建议设置以下对比算法：
+\begin{enumerate}
+	\item \textbf{规则基线}：采用现有代码中的固定检测概率、固定邻道触发率和经验规则进行关联与轨迹管理；
+	\item \textbf{耿英凡方法复现口径}：采用固定概率模型、车道贝叶斯递推以及双车道多目标关联方法；
+	\item \textbf{郭洛庚方法复现口径}：采用自适应卡尔曼滤波、全局分配和固定概率轨迹管理；
+	\item \textbf{本文方法（去节点自适应）}：保留场景模型，但将节点检测概率和节点杂波强度固定为全局常数；
+	\item \textbf{本文方法（去场景判别）}：保留节点自适应，但用单帧阈值规则代替三状态场景模型；
+	\item \textbf{本文方法（去软计数定稿更新）}：保留其余模块，但将节点统计改为当前扫描硬计数即时更新；
+	\item \textbf{本文完整方法}：节点级检测概率/杂波强度自适应 + 三状态场景判别 + 标准化关联似然 + 固定滞后窗口回放。
+\end{enumerate}
+
+参数设置方面，需要统一各方法的状态模型、门控阈值和轨迹起始/删除规则。对本文方法，需重点给出以下参数：时间片长度 $\Delta T$、门控阈值 $\gamma$、遗忘因子 $\lambda_D,\lambda_{\kappa}$、场景转移矩阵参数、车道转移概率 $p_c$、固定滞后窗口长度 $L$、轨迹确认参数 $M/N$ 以及删除阈值 $\gamma_{\mathrm{del}},N_{\mathrm{del}}$。其中，$\Delta T$ 和 $L$ 需满足式~\eqref{eq:ch3_deltaT_upper} 和式~\eqref{eq:ch3_lag_condition} 所给出的可行区间。
+
+\subsection{评价指标}
+
+本章采用以下指标评价算法性能：
+
+\textbf{1）状态估计误差。} 采用位置均方根误差和速度均方根误差分别评价纵向位置与速度估计精度：
+\begin{equation}
+	RMSE_p=
+	\sqrt{\frac{1}{N_s}\sum_{k=1}^{N_s}(\hat p_k-p_k^{\ast})^2},
+	\qquad
+	RMSE_v=
+	\sqrt{\frac{1}{N_s}\sum_{k=1}^{N_s}(\hat v_k-v_k^{\ast})^2}.
+	\label{eq:ch3_rmse_v2}
+\end{equation}
+
+\textbf{2）多目标跟踪指标。} 统计身份切换次数（IDSW）、轨迹碎片数（Frag）、轨迹召回率（Track Recall）和轨迹精确率（Track Precision）。
+
+\textbf{3）车道与场景判别指标。} 对车道输出报告车道判别准确率和换道检测 $F_1$ 值；对场景判别报告三状态识别准确率以及“邻道干扰/双车并行”二分类准确率。
+
+\textbf{4）时间组织一致性指标。} 统计乱序到达比例 $\rho_{\mathrm{oo}}$、迟到量测回放吸收率、同一扫描内相邻节点同车触发概率以及回放前后结果一致率，用于验证混合扫描化处理的合理性。
+
+\textbf{5）实时性指标。} 统计平均单扫描处理耗时、95\%分位耗时以及回放触发时的附加计算开销。
+
+\subsection{实验一：标准化关联代价的密度适应性}
+
+从图中可以观察到，在节点退化阶段（约180s–400s），真实检测概率明显下降，而多检率显著升高。传统方法由于采用固定检测概率和多检率假设，其估计值基本保持稳定，无法反映节点状态变化。而本文方法通过节点级后验更新机制，可以根据观测数据动态调整检测概率与多检率估计，使得估计曲线在退化阶段出现明显变化趋势，并且在正常阶段保持较稳定的估计水平。
+
+此结果表明，节点自适应后验模型能够有效识别节点状态变化，并为后续关联与轨迹管理提供更加合理的概率参数。
+
+该实验用于验证显式引入检测概率、量测似然和杂波强度后，关联代价在不同车流密度下的稳定性。实验中可逐步提高道路车流密度和节点杂波事件强度，并比较规则基线、固定概率方法和本文方法在 RMSE、IDSW 和 Frag 上的变化趋势。若本文方法在车流密度增大时仍能保持较稳定的关联精度，则说明显式引入 $p_D$、$g(z\mid x)$ 和 $\kappa(z)$ 的标准化表达相比经验打分具有更好的客观性和可迁移性。
+
+\subsection{实验二：节点后验在线更新的稳定性验证}
+
+该实验用于验证节点检测概率与节点杂波强度在线更新的可辨识性和稳定性。可在仿真中人为设置不同节点的漏检率和杂波强度，并在运行过程中注入节点状态变化，例如某些节点在特定时间段内出现检测能力下降或误触发增加。重点比较以下两种实现：
+\begin{enumerate}
+	\item 当前扫描硬计数即时更新；
+	\item 本文提出的“冻结参数—软计数—窗口定稿后更新”。
+\end{enumerate}
+若第一种方法在早期误关联后迅速形成后验偏移，而第二种方法能够保持后验平稳收敛，则可直接验证本文改进在抑制循环依赖和自反馈放大方面的有效性。
+
+\subsection{实验三：邻道干扰与双车并行判别能力}
+
+该实验用于验证三状态场景判别模型对复杂邻道交互场景的建模能力。实验场景至少包括以下三类：单车正常通过、单车通过且产生邻道干扰、双车长时间并行通过。尤其需要构造“两车并行且相对时间差持续小于经验阈值”的困难场景，以验证单帧阈值规则与多步场景递推之间的差异。
+
+评价时除统计整体跟踪指标外，还需额外统计场景判别准确率、将真实双车并行误判为邻道干扰的比例，以及车道状态抖动次数。若本文方法在该实验中能够显著降低误判率，则可以证明其创新点并非对原有规则的简单调参，而是对前人失效场景的有效模型重构。
+
+\subsection{实验四：漏检率与连续漏检容忍范围}
+
+该实验用于评估本章方法对轻度漏检和短连漏检的容忍范围。理论上，连续漏检可容忍长度与两类因素有关：一是无量测条件下协方差增长速度，二是邻近车辆进入同一门控区域后产生的身份歧义。记轨迹在连续漏检 $m$ 个信标后的纵向预测方差为 $P_{pp}^{(m)}$，若
+\begin{equation}
+	\sqrt{\gamma P_{pp}^{(m)}}<\frac{d_{\mathrm{sep}}}{2},
+	\label{eq:ch3_miss_bound}
+\end{equation}
+其中，$d_{\mathrm{sep}}$ 为同向相邻候选车辆的典型最近间距，则认为该轨迹在连续漏检 $m$ 个信标后仍有较大概率维持唯一门控。由式~\eqref{eq:ch3_miss_bound} 可知，连续漏检容忍上限并不由滤波器单独决定，而由过程噪声、车流密度和节点布设共同决定。
+
+结合现有多地磁双车道布设和高速公路典型运行速度，可预期本章方法在常规车流条件下能够较稳定地容忍连续 $2\sim 3$ 个信标缺测；在低密度车流和节点状态较稳定的条件下，该上限可扩展到连续 $3\sim 4$ 个信标，但超过该范围后，由于门控范围持续扩张和身份歧义累积，轨迹碎片化将明显增加。需要强调的是，上述范围属于基于模型和代码骨架的合理推测，最终仍应以实验统计结果为准。
+
+若实验结果表明第~3~章方法的稳定容忍范围主要集中在连续 $2\sim3$ 个信标，则第~4~章可自然定位为“接收第~3~章输出的轨迹段，并对超过固定滞后窗口和删除阈值后的长间断片段进行在线聚类重构”的后续方法；若实际容忍范围在部分场景下可扩展到连续 $4$ 个信标，则第~4~章仍应聚焦于更长时间尺度的片段拼接，而不是重复第~3~章已经能够在线处理的短间断问题。
+
+\subsection{实验五：时间组织与回放一致性验证}
+
+该实验用于验证扫描化与事件驱动更新混合使用时的时间一致性。重点统计以下量：
+\begin{enumerate}
+	\item 在不同 $\Delta T$ 设置下，同一扫描内相邻节点同车触发事件出现的比例；
+	\item 在不同 $L$ 设置下，迟到量测被窗口吸收的比例；
+	\item 同一数据流按“原始到达顺序+回放”和“按触发时间离线重排”两种方式处理时的轨迹结果一致率。
+\end{enumerate}
+若在满足式~\eqref{eq:ch3_deltaT_upper} 和式~\eqref{eq:ch3_lag_condition} 的参数范围内，三项指标均表现良好，则说明本章所采用的混合时间组织方式在工程上是合理且可复现的。
+
+\subsection{消融实验与复杂度分析}
+
+为证明本章方法并非对原有系统的局部修补，而是一个统一的概率递推模型，需要设置如下消融实验：
+\begin{enumerate}
+	\item 去掉节点自适应，仅保留固定检测概率和固定杂波强度；
+	\item 去掉三状态场景判别，仅保留单帧时间阈值和磁峰值规则；
+	\item 去掉固定滞后窗口回放，仅保留单扫描在线关联；
+	\item 去掉磁特征兼容因子，仅使用运动学和车道/场景信息；
+	\item 去掉软计数定稿更新，将节点统计替换为当前扫描硬计数即时更新。
+\end{enumerate}
+通过比较上述各版本在 RMSE、IDSW、Frag、场景判别准确率和车道精度上的差异，可以定量展示每个模块的独立贡献。
+
+从计算复杂度上看，本文主要新增了三类运算：节点后验递推、场景后验递推和固定滞后回放。节点后验递推对每个节点仅涉及常数维度参数更新，复杂度近似为 $\mathcal O(B_n)$，其中 $B_n$ 为扫描内活跃节点数；场景后验递推对每个候选邻道竞争上下文仅涉及 $3$ 个状态，复杂度近似为 $\mathcal O(1)$；全局分配复杂度仍由原有分配器决定。固定滞后回放的最坏复杂度与窗口长度 $L$ 成正比，因此需要通过实验分析精度增益与额外开销之间的折中关系。
+
+\subsection{本节小结}
+
+本节围绕“标准化关联、节点后验稳定性、邻道干扰/双车并行判别、连续漏检容忍范围和时间组织一致性”五类问题设计了系统性的实验方案。实验结果不仅用于验证本章方法的精度与鲁棒性，也用于明确其适用边界，并为第~4~章轨迹片段在线聚类重构提供输入形式和触发条件。
+
+\section{本章小结}
+
+本章针对双车道多地磁事件流在线跟踪中存在的节点状态差异、邻道干扰、双车并行和轻度漏检问题，在保持现有系统“预测—分配—更新—管理”主干不变的前提下，提出了一种基于节点状态自适应与场景概率判别的在线车辆目标跟踪方法。首先，建立了与事件流一致的纵向状态空间模型，并给出状态初始化、事件级预测和节点相关量测更新方法；其次，用显式包含检测概率、量测似然和杂波强度的标准化关联似然比重写了原有经验打分，使关联代价在不同车流密度和杂波水平下具有一致的统计语义；再次，采用“冻结参数—软计数—窗口定稿后更新”的两阶段递推策略，对节点检测概率和节点杂波强度进行在线估计，从而避免当前关联结果与节点统计之间的循环依赖；随后，通过邻道干扰/双车并行三状态场景模型，将原本依赖经验阈值的邻道判别转化为显式的时序概率递推问题；最后，在固定滞后窗口回放和轨迹管理机制的配合下，形成了完整且可复现的工程闭环。
+
+从章节衔接关系上看，第~3~章的定位是解决\emph{轻度漏检和短连漏检条件下的在线高精度跟踪}问题。其输出结果不仅包括带身份和车道标记的连续轨迹，也包括在超过窗口长度 $L$ 或删除阈值后自然形成的轨迹片段。第~4~章将在此基础上，以轨迹片段为基本输入单元，进一步研究长缺测条件下的在线轨迹聚类与片段拼接问题，从而形成“第~3~章在线维持，第~4~章长间断重构”的两级处理体系。
+
+
+
+
+
+
+\chapter{面向长缺测工况的片段级在线聚类与轨迹重构}
+\label{chap:cedas_fragment}
+
+\section*{引言}
+在前章中，我们以原始地磁触发记录 $\mathbf{z}_j$ 为输入，基于变分贝叶斯自适应滤波与固定滞后全局关联，实现了双车道场景下的在线高精度目标跟踪，并对车辆运动状态 $\boldsymbol{\theta}$ 进行递推估计。当漏检与通信抖动导致的连续缺测超过在线轨迹维持阈值时，上游跟踪器不可避免地产生轨迹断裂：输出轨迹片段（tracklet/fragment）及少量未被关联的残余单点样本。针对该“长缺测”失效工况，本章将原第四章基于点样本的在线聚类重新设计为一个下游片段级在线聚类与重构模块：输入不再是原始点样本，而是上游传递的片段摘要与残余单点（作为退化片段），并在在线约束下完成跨缺测段的身份修复与轨迹拼接。
+
+地磁触发的本质是车辆在离散观测点附近产生的事件流，受漏检、虚警、对时误差与通信迟到影响，上游在线跟踪在长缺测下会输出多个轨迹片段而非连续轨迹。该问题可以表述为：给定片段流 $\{\mathbf{u}_j\}$，在在线约束下将其聚类为车辆级簇 $\{C_i\}$，使同一车辆的片段尽可能归并到同一簇，同时避免不同车辆被错误合并。
+
+与经典“检测到轨迹”的多目标跟踪分解（tracking-by-detection）类似，片段级重构可视为更高层的关联问题：从“检测--轨迹”关联上升为“片段--身份簇”关联。在视觉多目标跟踪领域，基于片段（tracklet）的关联与拼接是应对长时遮挡与漏检的重要路径，常见做法包括网络流/最短路类全局关联与在线 tracklet 关联等。我们借鉴此类思想，将运动一致性作为主导约束，并保留在线特性与有限回溯能力。
+
+本章的核心任务是：在长缺测条件下，利用轨迹段的边界状态、磁特征统计和车道信息，将原本分离的轨迹段在线归并为更长的车辆轨迹。围绕这一目标，本章首先给出样本、轨迹段、簇以及候选关联图的定义；随后给出在线聚类算法的总体流程，并依次阐述初始化、聚类得分计算、簇更新与生命周期管理等关键环节；最后给出实验设计与评价指标，为后续结果分析提供统一依据。
+
+\section{数据定义与图结构建模}
+
+\subsection{数据流图与模块边界}
+本章模块位于上游跟踪器之后：上游将原始量测 $\mathbf{z}_j$ 处理为片段摘要 $\mathbf{u}_j$（含起止状态与不确定度）及残余单点；本章对 $\mathbf{u}_j$ 在线聚类并输出重构后的车辆级轨迹/身份簇。为便于工程实现与论文表达，图 \ref{fig:mermaid_flow_frag} 给出 mermaid 形式的数据流示意（若编译环境不支持，可将该代码块外部渲染并以图片插入）。
+
+\begin{figure}[htbp]
+	\centering
+	\begin{minipage}{0.92\linewidth}
+		\begin{verbatim}
+			flowchart LR
+			A[原始地磁触发 z_j] --> B[上游在线跟踪(第3章)]
+			B --> C[片段/tracklet 摘要 u_j]
+			B --> D[残余单点样本]
+			D --> E[退化片段封装]
+			C --> F[片段级固定滞后缓冲 L_f]
+			E --> F
+			F --> G[片段-簇关联(运动马氏 + 磁/车道)]
+			G --> H[车辆级簇/重构轨迹输出]
+		\end{verbatim}
+	\end{minipage}
+	\caption{片段级在线聚类/重构模块的数据流 mermaid 代码示意。}
+	\label{fig:mermaid_flow_frag}
+\end{figure}
+
+\section{片段输入模式 $\mathbf{u}_j$ 与退化片段封装}
+\subsection{片段输入模式定义}
+我们将上游按时间输出的第 $j$ 个轨迹片段记为 $\mathbf{u}_j$，其字段定义为
+\begin{equation}
+	\mathbf{u}_j \triangleq
+	\Big(
+	t_j^{\mathrm{s}},\, t_j^{\mathrm{e}},\,
+	\hat p_j^{\mathrm{s}},\, \hat p_j^{\mathrm{e}},\,
+	\hat v_j^{\mathrm{s}},\, \hat v_j^{\mathrm{e}},\,
+	\boldsymbol{\pi}_j,\,
+	\bar M_j,\, \sigma_{M,j}^2,\,
+	\mathbf{P}_j^{\mathrm{s}},\, \mathbf{P}_j^{\mathrm{e}},\,
+	n_j
+	\Big).
+	\tag{4-1}
+\end{equation}
+其中：
+
+//去掉点
+
+\begin{itemize}
+	\item $t_j^{\mathrm{s}},t_j^{\mathrm{e}}$ 分别为片段起止时刻（时间戳）。
+	\item $\hat p_j^{\mathrm{s}},\hat p_j^{\mathrm{e}}$ 分别为片段起止纵向位置估计；$\hat v_j^{\mathrm{s}},\hat v_j^{\mathrm{e}}$ 分别为片段起止纵向速度估计。我们记片段起止状态向量为
+	\[
+	\hat{\boldsymbol{\theta}}_j^{\mathrm{s}} \triangleq
+	\begin{bmatrix}\hat p_j^{\mathrm{s}}\\ \hat v_j^{\mathrm{s}}\end{bmatrix},\qquad
+	\hat{\boldsymbol{\theta}}_j^{\mathrm{e}} \triangleq
+	\begin{bmatrix}\hat p_j^{\mathrm{e}}\\ \hat v_j^{\mathrm{e}}\end{bmatrix}.
+	\]
+	\item $\boldsymbol{\pi}_j\in\mathbb{R}^2$ 为片段车道概率向量，满足 $\pi_j(1)+\pi_j(2)=1$、$\pi_j(\lambda)\ge 0$。
+	\item $\bar M_j,\sigma_{M,j}^2$ 为片段磁特征均值与方差（例如由片段内地磁峰值序列 $M^{\mathrm{peak}}$ 滤波/统计获得）。
+	\item $\mathbf{P}_j^{\mathrm{s}},\mathbf{P}_j^{\mathrm{e}}\in\mathbb{R}^{2\times2}$ 为片段起止状态不确定度（协方差），来自上游滤波与关联的后验输出。该协方差的在线自适应校准可借鉴 VB-AKF 等变分贝叶斯噪声自适应滤波框架。//这句话啥意思？想表达啥
+	\item $n_j$ 为片段包含的原始量测计数（支持度）。
+\end{itemize}
+% citeturn0search1turn0search21
+
+\vspace{0.3em}
+\noindent\textbf{设计动机：}（4-1）使片段成为“自包含”单元：下游拼接只依赖片段边界状态与不确定度，无需回溯全部原始点序列，从而满足在线与存储约束，并与数据流聚类的设计理念一致。CEDAS 作为全在线演化数据流聚类算法强调在线可更新的簇结构与生命周期管理，本章继承其思想但改变聚类对象与状态语义。
+
+\subsection{残余单点作为退化片段的数学封装}
+\label{sec:degenerate_frag_zh}
+当上游产生残余单点（例如某条量测 $\mathbf{z}_j$ 未被任何轨迹吸收或仅形成不稳定候选），下游仍需统一处理。我们将单点封装为退化片段：设该单点时间戳为 $t_j$，纵向观测位置为 $x_j$（由 $\mathbf{z}_j$ 中的纵向坐标分量提取），则定义
+\begin{equation}
+	t_j^{\mathrm{s}} = t_j^{\mathrm{e}} = t_j,\qquad
+	\hat p_j^{\mathrm{s}} = \hat p_j^{\mathrm{e}} = x_j.
+	\tag{4-2}
+\end{equation}
+由于单点缺乏速度信息，我们采用保守速度先验 $v_0$（例如限速区间中值）：
+\begin{equation}
+	\hat v_j^{\mathrm{s}} = \hat v_j^{\mathrm{e}} = v_0,
+	\tag{4-3}
+\end{equation}
+并将协方差初始化为
+\begin{equation}
+	\mathbf{P}_j^{\mathrm{s}}=\mathbf{P}_j^{\mathrm{e}}=
+	\begin{bmatrix}
+		\sigma_{p,0}^2 & 0\\
+		0 & \sigma_{v,0}^2
+	\end{bmatrix},\quad
+	\sigma_{v,0}^2 \text{ 取较大值以反映速度不确定性。}
+	\tag{4-4}
+\end{equation}
+车道概率 $\boldsymbol{\pi}_j$ 可由单点所属传感器车道号初始化（如 $(1-\varepsilon_\ell,\varepsilon_\ell)$），磁统计取 $\bar M_j=M_j^{\mathrm{peak}}$、$\sigma_{M,j}^2=\sigma_{M,0}^2$；最后 $n_j=1$。上述封装保证下游算法只需处理统一类型的输入序列 $\{\mathbf{u}_j\}$。
+
+\section{簇状态 $C_i$ 的尾端摘要建模}
+\subsection{簇状态定义}
+我们维护车辆身份簇集合 $\mathcal{C}=\{C_i\}_{i=1}^{N_C}$。与“基于点的 CEDAS 风格聚类”将簇表示为特征空间中心不同，本章将簇状态定义为可延拓的\textbf{尾端状态摘要}：
+\begin{equation}
+	C_i \triangleq
+	\Big(
+	t_i^{\mathrm{tail}},\,
+	\hat{\boldsymbol{\theta}}_i^{\mathrm{tail}},\,
+	\boldsymbol{\pi}_i,\,
+	\bar M_i,\, \sigma_{M,i}^2,\,
+	\mathbf{P}_i^{\mathrm{tail}},\,
+	E_i,\,
+	\mathcal{S}_i,\,
+	N_i
+	\Big).
+	\tag{4-5}
+\end{equation}
+其中：
+\begin{itemize}
+	\item $t_i^{\mathrm{tail}}$ 为簇 $i$ 当前尾端时刻；
+	\item $\hat{\boldsymbol{\theta}}_i^{\mathrm{tail}}=[\hat p_i^{\mathrm{tail}},\hat v_i^{\mathrm{tail}}]^\top$ 为尾端纵向位置与速度估计；
+	\item $\mathbf{P}_i^{\mathrm{tail}}$ 为尾端状态协方差；
+	\item $\boldsymbol{\pi}_i$ 为簇级车道概率；
+	\item $\bar M_i,\sigma_{M,i}^2$ 为簇级磁特征均值/方差；
+	\item $E_i$ 为能量（活跃度）变量，用于生命周期管理；
+	\item $\mathcal{S}_i$ 为簇成员片段索引集合；
+	\item $N_i=\sum_{j\in\mathcal{S}_i} n_j$ 为累计支持度（总样本计数）。
+\end{itemize}
+
+\vspace{0.3em}
+\noindent\textbf{说明：}尾端摘要的关键优势在于：下游拼接的判别本质是“新片段能否在运动学上接到该车辆当前尾端”，因此簇应保存\emph{尾端}而非历史均值；同时，保留 $\mathbf{P}_i^{\mathrm{tail}}$ 使得马氏门控具有统计意义，避免仅凭经验阈值做拼接决策。% citeturn0search1turn0search21
+
+\subsection{基本假设}
+为保证方法自洽，本章做如下假设（并在 \ref{sec:limitations_zh} 讨论其局限）：
+\begin{enumerate}
+	\item \textbf{单向行驶假设：}车辆在监测路段沿纵向单向行驶，纵向位置随时间单调递增（允许局部速度波动）。
+	\item \textbf{片段边界充分性：}片段用起止状态与协方差近似表征其时空信息，可作为下游关联的有效摘要。
+	\item \textbf{间隙运动模型：}跨片段时间间隙采用常速度桥接模型，并通过过程噪声增强来覆盖未建模加速度与对时误差影响。
+	\item \textbf{车道与磁特征为辅助证据：}车道概率与磁统计可用于消歧，但不作为唯一主导约束。
+\end{enumerate}
+
+\section{片段--簇关联：运动感知马氏评分与多证据融合}
+\subsection{尾端到片段起点的状态预测}
+考察将片段 $\mathbf{u}_j$ 归并到簇 $C_i$ 的可行性。定义时间间隙
+\begin{equation}
+	\Delta t_{ij} \triangleq t_j^{\mathrm{s}} - t_i^{\mathrm{tail}}.
+	\tag{4-6}
+\end{equation}
+为保证因果一致性，应满足 $\Delta t_{ij}>0$，并设置最大拼接间隙 $T_{\max}$，要求 $\Delta t_{ij}\le T_{\max}$。
+
+采用常速度状态转移矩阵
+\begin{equation}
+	\mathbf{F}(\Delta t)=
+	\begin{bmatrix}
+		1 & \Delta t\\
+		0 & 1
+	\end{bmatrix},
+	\tag{4-7}
+\end{equation}
+则簇尾端传播到片段起点时刻的预测状态为
+\begin{equation}
+	\tilde{\boldsymbol{\theta}}_{i\rightarrow j}^{\mathrm{s}}
+	=
+	\mathbf{F}(\Delta t_{ij})\,\hat{\boldsymbol{\theta}}_i^{\mathrm{tail}}.
+	\tag{4-8}
+\end{equation}
+其中预测纵向位置（满足题设中的 $\tilde p_{i\rightarrow j}$ 记号）为
+\begin{equation}
+	\tilde p_{i\rightarrow j}
+	\triangleq
+	\left[\tilde{\boldsymbol{\theta}}_{i\rightarrow j}^{\mathrm{s}}\right]_1
+	=
+	\hat p_i^{\mathrm{tail}}+\hat v_i^{\mathrm{tail}}\Delta t_{ij}.
+	\tag{4-9}
+\end{equation}
+
+为传播不确定度，我们采用白噪声加速度离散化结构矩阵
+\begin{equation}
+	\bar{\mathbf{Q}}(\Delta t)=
+	\begin{bmatrix}
+		\frac{\Delta t^4}{4} & \frac{\Delta t^3}{2}\\[4pt]
+		\frac{\Delta t^3}{2} & \Delta t^2
+	\end{bmatrix},
+	\tag{4-10}
+\end{equation}
+并用间隙过程噪声强度 $q_{\mathrm{gap}}$（可取上游 VB 自适应过程噪声估计的保守上界，或在无该字段时取经验常数）构造预测协方差：
+\begin{equation}
+	\tilde{\mathbf{P}}_{i\rightarrow j}^{\mathrm{s}}
+	=
+	\mathbf{F}(\Delta t_{ij})\,\mathbf{P}_i^{\mathrm{tail}}\,\mathbf{F}(\Delta t_{ij})^\top
+	+
+	q_{\mathrm{gap}}\,\bar{\mathbf{Q}}(\Delta t_{ij}).
+	\tag{4-11}
+\end{equation}
+% citeturn0search1turn0search21
+
+\subsection{运动感知马氏评分 $d_{\mathrm{kin}}(i,j)$}
+用片段起点状态 $\hat{\boldsymbol{\theta}}_j^{\mathrm{s}}$ 与预测状态 $\tilde{\boldsymbol{\theta}}_{i\rightarrow j}^{\mathrm{s}}$ 构造残差
+\begin{equation}
+	\mathbf{r}_{ij}
+	\triangleq
+	\hat{\boldsymbol{\theta}}_j^{\mathrm{s}}-\tilde{\boldsymbol{\theta}}_{i\rightarrow j}^{\mathrm{s}}.
+	\tag{4-12}
+\end{equation}
+为同时反映预测不确定度与片段边界不确定度，定义合并协方差
+\begin{equation}
+	\mathbf{\Sigma}_{ij}
+	\triangleq
+	\tilde{\mathbf{P}}_{i\rightarrow j}^{\mathrm{s}}
+	+
+	\mathbf{P}_j^{\mathrm{s}}
+	+
+	\mathbf{R}_{\mathrm{frag}},
+	\tag{4-13}
+\end{equation}
+其中 $\mathbf{R}_{\mathrm{frag}}$ 为片段摘要误差与模型失配的正则项（通常取对角阵），用于避免协方差过度自信导致的误拒绝或误接纳。
+
+据此定义运动感知马氏距离（评分）
+\begin{equation}
+	d_{\mathrm{kin}}(i,j)
+	\triangleq
+	\mathbf{r}_{ij}^\top
+	\mathbf{\Sigma}_{ij}^{-1}
+	\mathbf{r}_{ij}.
+	\tag{4-14}
+\end{equation}
+在高斯近似和协方差校准较好时，$d_{\mathrm{kin}}$ 可近似服从自由度为 2 的 $\chi^2$ 分布，从而为门控阈值选择提供统计依据。
+% citeturn0search1turn0search21
+
+\subsection{磁特征距离 $d_{\mathrm{mag}}(i,j)$ 与车道相似度 $s_{\mathrm{lane}}(i,j)$}
+磁特征作为车辆“弱签名”，受车型、车速、横向偏移与节点标定影响，宜作为辅助证据。我们用方差归一化的标量距离：
+\begin{equation}
+	d_{\mathrm{mag}}(i,j)
+	\triangleq
+	\frac{(\bar M_j-\bar M_i)^2}{\sigma_{M,j}^2+\sigma_{M,i}^2+\sigma_{M,0}^2},
+	\tag{4-15}
+\end{equation}
+其中 $\sigma_{M,0}^2$ 为方差下限，用于覆盖峰值提取噪声与跨节点幅值偏差。
+
+车道信息以概率形式维护。为允许间隙内发生换道，我们对簇车道概率做马尔可夫预测：
+\begin{equation}
+	\tilde{\boldsymbol{\pi}}_{i\rightarrow j}
+	=
+	\mathbf{A}_{\mathrm{lane}}^{\,m_{ij}}\boldsymbol{\pi}_i,\qquad
+	\mathbf{A}_{\mathrm{lane}}=
+	\begin{bmatrix}
+		1-p_{\mathrm{lc}} & p_{\mathrm{lc}}\\
+		p_{\mathrm{lc}} & 1-p_{\mathrm{lc}}
+	\end{bmatrix},
+	\tag{4-16}
+\end{equation}
+其中 $p_{\mathrm{lc}}$ 为单位时间尺度的换道先验概率，$m_{ij}$ 为等效步数，可取
+\begin{equation}
+	m_{ij}\triangleq
+	\max\!\left(1,\left\lfloor\frac{\Delta t_{ij}}{\Delta T_{\mathrm{ref}}}\right\rfloor\right),
+	\tag{4-17}
+\end{equation}
+$\Delta T_{\mathrm{ref}}$ 为参考时间尺度（如典型传感器间距的行驶时间）。
+
+我们定义车道相似度为概率向量内积：
+\begin{equation}
+	s_{\mathrm{lane}}(i,j)
+	\triangleq
+	\tilde{\boldsymbol{\pi}}_{i\rightarrow j}^{\top}\boldsymbol{\pi}_j
+	\in[0,1].
+	\tag{4-18}
+\end{equation}
+
+\subsection{组合得分与门控判决}
+综合运动、磁特征与车道三类信息，定义片段--簇组合得分：
+\begin{equation}
+	\mathrm{Score}_{ij}
+	=
+	-\alpha\, d_{\mathrm{kin}}(i,j)
+	-\beta\, d_{\mathrm{mag}}(i,j)
+	+\gamma\, s_{\mathrm{lane}}(i,j),
+	\qquad
+	\alpha>0,\ \beta>0,\ \gamma\ge 0.
+	\tag{4-19}
+\end{equation}
+为限制候选规模并抑制伪拼接，我们采用两级门控：
+\begin{align}
+	&\textbf{可行性门控：}\quad
+	0<\Delta t_{ij}\le T_{\max},\quad
+	d_{\mathrm{kin}}(i,j)\le \tau_{\mathrm{kin}},\quad
+	d_{\mathrm{mag}}(i,j)\le \tau_{\mathrm{mag}},
+	\tag{4-20}\\
+	&\textbf{得分接纳：}\quad
+	\mathrm{Score}_{ij}\ge \tau_{\mathrm{score}}.
+	\tag{4-21}
+\end{align}
+对通过门控的候选簇集合 $\mathcal{C}_{\mathrm{cand}}(j)$，选择
+\begin{equation}
+	i^\star(j)=\arg\max_{i\in\mathcal{C}_{\mathrm{cand}}(j)}\mathrm{Score}_{ij}.
+	\tag{4-22}
+\end{equation}
+若 $\mathcal{C}_{\mathrm{cand}}(j)=\varnothing$，则 $\mathbf{u}_j$ 初始化新簇。
+
+\section{在线规则：初始化、合并/更新、分裂与删除}
+\subsection{簇初始化}
+当片段 $\mathbf{u}_j$ 无法与任何活跃簇匹配时，创建新簇 $C_{\mathrm{new}}$。为使簇具备“可延拓尾端”的语义，我们以片段终点作为尾端初始化：
+\begin{equation}
+	t_{\mathrm{new}}^{\mathrm{tail}}\leftarrow t_j^{\mathrm{e}},\qquad
+	\hat{\boldsymbol{\theta}}_{\mathrm{new}}^{\mathrm{tail}}\leftarrow \hat{\boldsymbol{\theta}}_j^{\mathrm{e}},\qquad
+	\mathbf{P}_{\mathrm{new}}^{\mathrm{tail}}\leftarrow \mathbf{P}_j^{\mathrm{e}}.
+	\tag{4-23}
+\end{equation}
+并设置
+\begin{equation}
+	\boldsymbol{\pi}_{\mathrm{new}}\leftarrow \boldsymbol{\pi}_j,\quad
+	\bar M_{\mathrm{new}}\leftarrow \bar M_j,\quad
+	\sigma_{M,\mathrm{new}}^2\leftarrow \sigma_{M,j}^2,
+	\tag{4-24}
+\end{equation}
+\begin{equation}
+	E_{\mathrm{new}}\leftarrow 1,\qquad
+	\mathcal{S}_{\mathrm{new}}\leftarrow\{j\},\qquad
+	N_{\mathrm{new}}\leftarrow n_j.
+	\tag{4-25}
+\end{equation}
+
+\subsection{合并与尾端状态/协方差更新}
+当 $\mathbf{u}_j$ 归并到簇 $C_i$ 时，我们需要将簇尾端推进到片段末端并维持不确定度的一致性。设
+\[
+\Delta t_{ij}^{\mathrm{end}}\triangleq t_j^{\mathrm{e}}-t_i^{\mathrm{tail}}.
+\]
+先将簇尾端传播到片段末端时刻：
+\begin{equation}
+	\tilde{\boldsymbol{\theta}}_{i\rightarrow j}^{\mathrm{e}}
+	=
+	\mathbf{F}(\Delta t_{ij}^{\mathrm{end}})\hat{\boldsymbol{\theta}}_i^{\mathrm{tail}},
+	\qquad
+	\tilde{\mathbf{P}}_{i\rightarrow j}^{\mathrm{e}}
+	=
+	\mathbf{F}(\Delta t_{ij}^{\mathrm{end}})\mathbf{P}_i^{\mathrm{tail}}\mathbf{F}(\Delta t_{ij}^{\mathrm{end}})^\top
+	+
+	q_{\mathrm{gap}}\bar{\mathbf{Q}}(\Delta t_{ij}^{\mathrm{end}}).
+	\tag{4-26}
+\end{equation}
+再与片段末端估计 $(\hat{\boldsymbol{\theta}}_j^{\mathrm{e}},\mathbf{P}_j^{\mathrm{e}})$ 做高斯信息融合：
+\begin{equation}
+	\mathbf{P}_i^{\mathrm{tail},+}
+	=
+	\left(
+	[\tilde{\mathbf{P}}_{i\rightarrow j}^{\mathrm{e}}]^{-1}
+	+
+	[\mathbf{P}_j^{\mathrm{e}}]^{-1}
+	\right)^{-1},
+	\quad
+	\hat{\boldsymbol{\theta}}_i^{\mathrm{tail},+}
+	=
+	\mathbf{P}_i^{\mathrm{tail},+}
+	\left(
+	[\tilde{\mathbf{P}}_{i\rightarrow j}^{\mathrm{e}}]^{-1}\tilde{\boldsymbol{\theta}}_{i\rightarrow j}^{\mathrm{e}}
+	+
+	[\mathbf{P}_j^{\mathrm{e}}]^{-1}\hat{\boldsymbol{\theta}}_j^{\mathrm{e}}
+	\right).
+	\tag{4-27}
+\end{equation}
+最后更新簇尾端：
+\begin{equation}
+	t_i^{\mathrm{tail}}\leftarrow t_j^{\mathrm{e}},\qquad
+	\hat{\boldsymbol{\theta}}_i^{\mathrm{tail}}\leftarrow \hat{\boldsymbol{\theta}}_i^{\mathrm{tail},+},\qquad
+	\mathbf{P}_i^{\mathrm{tail}}\leftarrow \mathbf{P}_i^{\mathrm{tail},+}.
+	\tag{4-28}
+\end{equation}
+该更新较“直接覆盖尾端”为更稳健：当片段末端估计存在较大不确定度时，融合会自然降低其权重；当簇尾端预测不确定度较大时，片段末端会占主导。% citeturn0search1turn0search21
+
+\subsection{车道概率更新}
+设合并前簇支持度为 $N_i$，片段支持度为 $n_j$。我们采用支持度加权的凸组合更新：
+\begin{equation}
+	\boldsymbol{\pi}_i
+	\leftarrow
+	(1-\eta_{\pi})\boldsymbol{\pi}_i+\eta_{\pi}\boldsymbol{\pi}_j,
+	\qquad
+	\eta_{\pi}\triangleq \frac{n_j}{N_i+n_j}.
+	\tag{4-29}
+\end{equation}
+该形式避免短片段对车道概率造成剧烈波动，并使长片段的贡献更大。
+
+\subsection{磁统计更新}
+为在线更新磁统计而不存储全部历史样本，我们维护累计支持度 $N_i$ 并采用合并均值/方差的递推形式。令
+\[
+S_i\triangleq (N_i-1)\sigma_{M,i}^2,\qquad
+S_j\triangleq (n_j-1)\sigma_{M,j}^2,\qquad
+N_i^+\triangleq N_i+n_j.
+\]
+更新均值：
+\begin{equation}
+	\bar M_i^{+}
+	=
+	\bar M_i+\frac{n_j}{N_i^+}(\bar M_j-\bar M_i),
+	\tag{4-30}
+\end{equation}
+更新离差平方和：
+\begin{equation}
+	S_i^{+}
+	=
+	S_i+S_j+\frac{N_i n_j}{N_i^+}(\bar M_j-\bar M_i)^2,
+	\tag{4-31}
+\end{equation}
+得到更新方差：
+\begin{equation}
+	\sigma_{M,i}^{2,+}
+	=
+	\begin{cases}
+		\displaystyle \frac{S_i^{+}}{N_i^{+}-1}, & N_i^{+}>1,\\[6pt]
+		\sigma_{M,0}^2, & N_i^{+}=1.
+	\end{cases}
+	\tag{4-32}
+\end{equation}
+最后置 $\bar M_i\leftarrow\bar M_i^+$、$\sigma_{M,i}^2\leftarrow\sigma_{M,i}^{2,+}$、$N_i\leftarrow N_i^+$。
+
+\subsection{能量式生命周期管理与删除规则}
+\label{sec:lifecycle_zh}
+借鉴 CEDAS 对演化数据流的在线生命周期控制思想，我们为每个簇维护能量 $E_i$。设当前处理时间为 $t$（例如已处理片段的最大 $t_j^{\mathrm{e}}$），则能量随时间指数衰减：
+\begin{equation}
+	E_i(t)\leftarrow E_i(t_i^{\mathrm{tail}})\exp\!\left(-\frac{t-t_i^{\mathrm{tail}}}{\tau_E}\right),
+	\tag{4-33}
+\end{equation}
+$\tau_E$ 为能量时间常数。当簇吸收新片段时提升能量：
+\begin{equation}
+	E_i\leftarrow \min\!\left(1,\ E_i+\kappa_E\cdot \min\!\left(1,\frac{n_j}{n_{\mathrm{ref}}}\right)\right),
+	\tag{4-34}
+\end{equation}
+其中 $n_{\mathrm{ref}}$ 为参考支持度，$\kappa_E$ 控制提升幅度。
+
+定义活跃簇集合
+\begin{equation}
+	\mathcal{C}_{\mathrm{act}}\triangleq \{\,i\mid E_i\ge E_{\min}\,\}.
+	\tag{4-35}
+\end{equation}
+当 $E_i<E_{\min}$ 时簇进入非活跃状态，不再参与新片段匹配。为限制内存占用，我们采用时间上限删除：
+\begin{equation}
+	E_i<E_{\min}\ \ \text{且}\ \ t-t_i^{\mathrm{tail}}>T_{\mathrm{del}}
+	\ \ \Rightarrow\ \ \text{删除 } C_i.
+	\tag{4-36}
+\end{equation}
+对非活跃簇的输出/丢弃可用支持度门限 $N_{\min}$：
+\begin{equation}
+	N_i\ge N_{\min}\Rightarrow \text{输出为重构轨迹；}\qquad
+	N_i< N_{\min}\Rightarrow \text{判为噪声并丢弃。}
+	\tag{4-37}
+\end{equation}
+% citeturn0search4turn0search8
+
+\subsection{分裂规则：纠正错误合并}
+长缺测下最典型错误是“将两辆相近车辆误拼接为同一簇”。为在线纠错，我们引入簇内一致性检测与分裂。
+
+将簇 $C_i$ 的成员片段按起点时间排序为
+\[
+\mathcal{S}_i^{\uparrow}=(j_1,\ldots,j_{|\mathcal{S}_i|}),\quad
+t_{j_1}^{\mathrm{s}}\le \cdots \le t_{j_{|\mathcal{S}_i|}}^{\mathrm{s}}.
+\]
+对相邻片段 $(j_k,j_{k+1})$，定义内部间隙
+\begin{equation}
+	\Delta t_k^{\mathrm{in}} \triangleq t_{j_{k+1}}^{\mathrm{s}}-t_{j_k}^{\mathrm{e}},
+	\tag{4-38}
+\end{equation}
+并基于片段末端到下一个片段起点构造内部运动马氏距离 $d_{\mathrm{kin}}^{\mathrm{in}}(j_k,j_{k+1})$（形式同（4-11）--（4-14），仅将尾端协方差替换为 $\mathbf{P}_{j_k}^{\mathrm{e}}$，起点协方差替换为 $\mathbf{P}_{j_{k+1}}^{\mathrm{s}}$）。
+
+若满足
+\begin{equation}
+	\Delta t_k^{\mathrm{in}}\ge T_{\mathrm{split}}
+	\quad \text{且}\quad
+	d_{\mathrm{kin}}^{\mathrm{in}}(j_k,j_{k+1})>\tau_{\mathrm{split}},
+	\tag{4-39}
+\end{equation}
+则认为该相邻连接不一致，构成分裂候选点。选取最不一致点
+\begin{equation}
+	k^\star=\arg\max_k d_{\mathrm{kin}}^{\mathrm{in}}(j_k,j_{k+1}),
+	\tag{4-40}
+\end{equation}
+并将成员集合分裂为
+\[
+\mathcal{S}_{i,1}=\{j_1,\ldots,j_{k^\star}\},\qquad
+\mathcal{S}_{i,2}=\{j_{k^\star+1},\ldots,j_{|\mathcal{S}_i|}\}.
+\]
+分裂后，保留原簇为第一部分并创建新簇承载第二部分；两簇的尾端摘要与统计量通过对各自成员片段按时间重放（4-23）--（4-34）更新规则获得。为控制开销，可将一致性检测与重放限制在最近 $W_{\mathrm{split}}$ 个片段的滑动窗口内。
+
+\section{固定滞后在线机制与迟到片段回插}
+\label{sec:fixedlag_zh}
+\subsection{为何需要片段级固定滞后}
+上游跟踪器自身可能采用固定滞后关联或存在通信迟到，使片段到达顺序与物理时间顺序不完全一致。若下游立即对每个到达片段做贪心拼接，则早期误拼接可能在后续证据到来时无法修正。为此，我们在片段层引入固定滞后缓冲：在有限延迟 $L_f$ 内接受迟到片段并局部重处理，而对超过滞后窗的历史决定做“提交（commit）”。
+
+\subsection{缓冲集合与提交规则}
+设当前下游时间 $t=\max$ 已到达片段末端时间。定义片段缓冲集合
+\begin{equation}
+	\mathcal{U}_{\mathrm{buf}}(t)\triangleq
+	\left\{
+	\mathbf{u}_j\ \middle|\ t-t_j^{\mathrm{e}}\le L_f
+	\right\},
+	\tag{4-41}
+\end{equation}
+其中 $L_f$ 为片段级固定滞后长度。满足 $t-t_j^{\mathrm{e}}>L_f$ 的片段被视为已提交，其簇归属不再更改。
+
+\subsection{迟到片段处理与局部重放}
+当迟到片段到达且满足 $t-t_j^{\mathrm{e}}\le L_f$，我们将其并入 $\mathcal{U}_{\mathrm{buf}}(t)$，并对缓冲窗口内片段按起点时间 $t_j^{\mathrm{s}}$ 进行排序后重放拼接流程。为避免复杂的“反更新”，我们采用\textbf{快照--重建}策略：在窗口边界 $t_{\mathrm{cut}}=t-L_f$ 处保存簇状态快照（或从更早提交点重建），然后仅对缓冲内片段依次执行门控、匹配、更新与必要的分裂检测。该做法与固定滞后平滑/固定滞后关联的思想一致：用有限未来信息减少局部歧义，同时保持在线可运行性。
+
+\section{算法框、复杂度与参数选择}
+\subsection{算法伪代码}
+下述算法给出片段级在线聚类/重构主流程与固定滞后重处理流程。为便于阅读，伪代码使用“簇集合 $\mathcal{C}$、缓冲集合 $\mathcal{U}_{\mathrm{buf}}$、当前时间 $t$”的抽象接口描述。
+
+%\begin{algorithm}[htbp]
+%	\caption{基于片段的在线聚类与重构（fCEDAS）主流程}
+%	\label{alg:fcedas_main_zh}
+%	\begin{algorithmic}[1]
+%		\Require 片段流 $\{\mathbf{u}_j\}$（可乱序到达），参数 $(\alpha,\beta,\gamma)$，门控阈值 $(\tau_{\mathrm{kin}},\tau_{\mathrm{mag}},\tau_{\mathrm{score}})$，时间阈值 $(T_{\max},L_f)$，生命周期参数 $(\tau_E,E_{\min},\kappa_E)$。
+%		\Ensure 重构簇集合 $\mathcal{C}$ 及可输出的车辆级轨迹。
+%		\State 初始化 $\mathcal{C}\leftarrow\varnothing,\ \mathcal{U}_{\mathrm{buf}}\leftarrow\varnothing,\ t\leftarrow -\infty$。
+%		\For{每个到达片段 $\mathbf{u}_j$}
+%		\State $t\leftarrow\max(t,t_j^{\mathrm{e}})$；将 $\mathbf{u}_j$ 插入缓冲 $\mathcal{U}_{\mathrm{buf}}(t)$（式（4-41））。
+%		\If{$t-t_j^{\mathrm{e}}\le L_f$}
+%		\State 执行算法 \ref{alg:fcedas_lag_zh}（缓冲内局部重放）。
+%		\Else
+%		\State 对 $\mathbf{u}_j$ 进行一次性拼接：计算候选簇得分（式（4-19）），判决（式（4-20）--（4-22））。
+%		\If{无候选通过门控}
+%		\State 初始化新簇（式（4-23）--（4-25））。
+%		\Else
+%		\State 合并与尾端更新（式（4-26）--（4-28）），并更新车道/磁统计/能量（式（4-29）--（4-34））。
+%		\EndIf
+%		\State 生命周期衰减与删除（式（4-33）--（4-37））。
+%		\EndIf
+%		\EndFor
+%	\end{algorithmic}
+%\end{algorithm}
+%
+%\begin{algorithm}[htbp]
+%	\caption{片段级固定滞后缓冲内的局部重放与提交}
+%	\label{alg:fcedas_lag_zh}
+%	\begin{algorithmic}[1]
+%		\Require 缓冲 $\mathcal{U}_{\mathrm{buf}}(t)$，簇集合$\mathcal{C}$，滞后长度 $L_f$。
+%		\Ensure 缓冲窗口内一致的簇状态。
+%		\State 定义窗口切点 $t_{\mathrm{cut}}\leftarrow t-L_f$。
+%		\State 从 $t_{\mathrm{cut}}$ 处簇快照恢复（或从最近提交点重建）。
+%		\State 将 $\mathcal{U}_{\mathrm{buf}}(t)$ 按 $t_j^{\mathrm{s}}$ 升序排序得到 $\mathcal{U}_{\mathrm{buf}}^{\uparrow}$。
+%		\For{每个 $\mathbf{u}_j\in\mathcal{U}_{\mathrm{buf}}^{\uparrow}$}
+%		\State 计算候选簇：门控（式（4-20）--（4-21））与得分（式（4-19））。
+%		\If{无候选通过}
+%		\State 初始化新簇（式（4-23）--（4-25））。
+%		\Else
+%		\State 合并并更新尾端状态/协方差（式（4-26）--（4-28））。
+%		\State 更新车道概率（式（4-29））与磁统计（式（4-30）--（4-32）），更新能量（式（4-34））。
+%		\State 可选：执行簇内一致性检测，必要时按（4-39）--（4-40）分裂。
+%		\EndIf
+%		\EndFor
+%		\State 对所有簇执行能量衰减（式（4-33））并更新活跃集合（式（4-35））。
+%		\State 提交满足 $t-t_j^{\mathrm{e}}>L_f$ 的片段，保留其余片段在缓冲中。
+%	\end{algorithmic}
+%\end{algorithm}
+
+\subsection{时间与空间复杂度}
+设活跃簇数为 $N_C=|\mathcal{C}_{\mathrm{act}}|$，缓冲窗口内片段数为 $B=|\mathcal{U}_{\mathrm{buf}}|$。对每个片段 $\mathbf{u}_j$，计算一个候选簇的代价主要包括：2 维状态传播与 $2\times2$ 协方差求逆（常数时间）、磁距离与车道相似度计算（常数时间）。因此，\textbf{无缓冲重放}时单片段匹配复杂度为
+\[
+O(N_C).
+\]
+在最坏情况下，迟到片段触发缓冲内重放，对 $B$ 个片段逐一与 $N_C$ 个簇评分，则复杂度为
+\[
+O(BN_C),
+\]
+其中 $B$ 由 $L_f$ 与片段产生率共同上界约束。分裂操作在朴素实现下需遍历簇成员相邻对，代价 $O(|\mathcal{S}_i|)$；实践中若限制一致性检测窗口为 $W_{\mathrm{split}}$，则分裂检测可视为 $O(W_{\mathrm{split}})$。
+
+空间复杂度主要由簇集合与缓冲片段集合决定，为
+\[
+O(N_C + B),
+\]
+且 $N_C$ 可通过能量衰减与删除规则控制上界。% citeturn0search4turn0search8
+
+\subsection{参数选择与敏感性说明}
+\paragraph{运动门控阈值 $\tau_{\mathrm{kin}}$。}
+由于 $d_{\mathrm{kin}}$ 为 2 维马氏距离，可参考 $\chi^2(2)$ 分位数选取（例如 $P_G\in[0.99,0.999]$ 对应阈值），并配合 $\mathbf{R}_{\mathrm{frag}}$ 防止协方差偏小导致的过严门控。协方差的在线校准可与上游 VB-AKF 风格噪声自适应配合，以减少“门控失配”。% citeturn0search1turn0search21
+
+\paragraph{磁门控 $\tau_{\mathrm{mag}}$ 与权重 $\beta$。}
+磁统计易受车速、横向偏移与节点差异影响，因此 $\tau_{\mathrm{mag}}$ 通常应取较松，仅用于排除明显不一致候选；$\beta$ 不宜过大，否则会在磁特征漂移时造成不必要的分裂（漏拼接）。
+
+\paragraph{车道权重 $\gamma$ 与换道先验 $p_{\mathrm{lc}}$。}
+若交通流换道频繁，过大的 $\gamma$ 会使算法偏向“同车道优先”，从而在换道期间误拒绝正确拼接；此时应适当增大 $p_{\mathrm{lc}}$ 或降低 $\gamma$。反之，在换道较少的路段，可适当增大 $\gamma$ 以提升消歧能力。
+
+\paragraph{固定滞后长度 $L_f$。}
+$L_f$ 增大可增强对迟到片段与短时歧义的纠偏能力，但会带来更高的 $BN_C$ 重放开销与更大的输出延迟。建议 $L_f$ 至少覆盖上游输出延迟与典型通信抖动范围，并略超过“单个传感器间距的正常行驶时间”的数倍，以覆盖相邻观测点间可能的漏检段。
+
+\paragraph{能量时间常数 $\tau_E$ 与删除时间 $T_{\mathrm{del}}$。}
+$\tau_E$ 决定簇在无更新时保持活跃的期望时长，应与可接受的最大缺测段相匹配；$T_{\mathrm{del}}$ 决定非活跃簇的保留上限，过大将造成簇集合膨胀并引入误拼接，过小会使迟到片段无法回插到正确簇。
+
+\section{新旧方法对比与可视化建议}
+\subsection{基于点的 CEDAS 风格方法与基于片段的 fCEDAS 对比}
+表 \ref{tab:cedas_old_new_zh} 总结了原“基于点样本的 CEDAS 风格聚类”与本章“基于片段的 fCEDAS 重构”的关键差异。需要强调的是：CEDAS 的原始贡献在于演化数据流的全在线聚类与能量式生命周期管理；本章保留其生命周期与在线更新思想，但将聚类对象、簇状态与评分机制改造为更符合“轨迹片段拼接”的目标。% citeturn0search4turn0search8
+
+\begin{table}[htbp]
+	\centering
+	\caption{旧的基于点的 CEDAS 风格方法与新的基于片段的 fCEDAS 方法对比}
+	\label{tab:cedas_old_new_zh}
+	\begin{tabular}{p{0.20\linewidth} p{0.37\linewidth} p{0.37\linewidth}}
+		\hline
+		属性 & 旧：基于点的 CEDAS 风格聚类（原第四章草案） & 新：基于片段的 fCEDAS（本章）\\
+		\hline
+		输入类型 & 单点样本（由 $\mathbf{z}_j$ 派生的特征向量，如 $[t,\mathrm{id},M,\ell]$） & 片段 $\mathbf{u}_j$：起止时间/位置/速度、车道概率、磁统计、协方差、样本计数（式（4-1））\\
+		簇状态语义 & 特征空间中心/方向向量 + 能量 + 成员；难以表达“可接续尾端” & 尾端状态摘要 $C_i$：$(t^{\mathrm{tail}},\hat{\boldsymbol{\theta}}^{\mathrm{tail}},\mathbf{P}^{\mathrm{tail}},\boldsymbol{\pi},\bar M,\sigma_M^2,E,\mathcal{S})$（式（4-5））\\
+		主导约束 & 加权欧氏距离/方向余弦等启发式相似度 & 运动感知马氏距离 $d_{\mathrm{kin}}$（式（4-14）），显式使用协方差传播与统计门控\\
+		辅助证据 & 隐式并入特征维度权重 & 显式磁距 $d_{\mathrm{mag}}$（式（4-15））与车道相似度 $s_{\mathrm{lane}}$（式（4-18））\\
+		更新规则 & 启发式中心平滑；能量重置/衰减 & 尾端状态信息融合（式（4-27））、车道/磁统计递推（式（4-29）--（4-32））、能量指数衰减（式（4-33））\\
+		迟到数据处理 & 多为到达即处理，回溯能力弱 & 片段级固定滞后缓冲 $L_f$ 与局部重放（式（4-41）与算法 \ref{alg:fcedas_lag_zh}）\\
+		分裂纠错 & 通常缺省或依赖经验阈值 & 基于簇内相邻片段的内部马氏不一致检测与分裂（式（4-39）--（4-40））\\
+		复杂度 & 单点 $O(N_C d)$（$d$ 为特征维数） & 单片段 $O(N_C)$；迟到重放最坏 $O(BN_C)$（$B$ 由 $L_f$ 上界）\\
+		\hline
+	\end{tabular}
+\end{table}
+
+\subsection{三维可视化建议：$\ell$--$t$--$\mathrm{id}$ 空间}
+尽管本章重构在状态空间（$p,v$）进行评分与门控，但为直观展示重构效果，建议在“车道 $\ell$--时间 $t$--传感器编号 $\mathrm{id}$”三维空间进行可视化：将每个重构簇用不同颜色表示，并按片段时间顺序连接片段对应的观测序列或片段代表点。该可视化能够直观揭示：（1）同一车辆在不同车道/观测点的演化轨迹；（2）长缺测导致的片段断裂位置；（3）重构后的跨缺测拼接是否合理。
+
+在本论文配套实现中，可使用如下脚本生成该三维视角图：
+\begin{itemize}
+	\item Python：\texttt{plot\_cluster\_3d\_lane\_time\_id.py}（读取片段/簇导出表并绘制三维散点与连线）；
+	\item MATLAB：\texttt{ClustersImg\_LaneTimeId.m}（以簇成员点为输入绘制三维视角图）；
+	\item 数据导出：\texttt{export\_cluster\_points\_for\_python.m}（将 MATLAB 结果导出供 Python 绘图）。
+\end{itemize}
+
+\section{局限性与适用边界}
+\label{sec:limitations_zh}
+本章方法在长缺测工况下提升了鲁棒性，但仍受以下因素限制：
+\begin{enumerate}
+	\item \textbf{密集跟驰下的不可辨识性：}若两车在长时段内保持相近速度、相近间距且位于同车道，且磁特征也相近，则在缺少连续观测的情况下，片段拼接存在不可避免的歧义。此时任何仅依赖运动学与弱签名的拼接方法都可能出现错误合并或错误分裂。
+	\item \textbf{间隙内换道的隐蔽性：}若换道完全发生在缺测间隙内，车道证据可能在片段两端不一致。我们通过（4-16）--（4-18）的概率预测缓解该问题，但在换道极频繁或车道观测误差较大时仍可能出现误拒绝。
+	\item \textbf{协方差失配风险：}运动马氏门控依赖 $\mathbf{P}_i^{\mathrm{tail}}$ 与 $\mathbf{P}_j^{\mathrm{s}}$ 的校准程度。若上游协方差系统性过小（过度自信），则门控过严导致漏拼接；若过大，则门控过松导致误拼接。我们引入 $\mathbf{R}_{\mathrm{frag}}$ 作为保守修正，但根本改进仍依赖上游噪声自适应与关联概率的合理性（如 VB-AKF 框架的噪声估计一致性）。% citeturn0search1turn0search21
+	\item \textbf{磁统计的非平稳性：}磁峰值与其统计量会受传感器个体差异与车辆横向位置变化影响，故磁距 $d_{\mathrm{mag}}$ 应作为辅助约束而非主导约束，否则会在磁漂移时造成不必要的轨迹碎片化。
+\end{enumerate}
+
+\section*{本章小结}
+本章将原第四章方法重构为一个面向长缺测工况的\textbf{下游片段级在线聚类/重构模块}。我们首先给出了上游--下游接口的片段输入模式 $\mathbf{u}_j$，并以退化片段形式统一处理残余单点；随后将簇状态 $C_i$ 重新定义为尾端状态摘要，使拼接判别与“可延拓尾端”的目标一致；在关联评分方面，我们推导了基于尾端预测与协方差传播的运动感知马氏评分 $d_{\mathrm{kin}}$，并与磁距 $d_{\mathrm{mag}}$、车道相似度 $s_{\mathrm{lane}}$ 融合形成组合得分；在在线机制方面，我们给出了初始化、合并/更新、分裂纠错与能量式删除规则，并引入片段级固定滞后缓冲以接纳迟到片段并局部重放；最后，我们分析了复杂度、参数敏感性，给出了新旧方法对比表，并提出了 $\ell$--$t$--$\mathrm{id}$ 三维可视化建议及对应脚本路径。
+
+% 关键参考（正文已用 \cite{} 标注，这里不要求完整参考文献表）：
+% CEDAS 原始：Hyde 等，Information Sciences 2017；VB-AKF 原始：Särkkä & Nummenmaa，IEEE TAC 2009；
+% tracklet/片段关联：Berclaz 等 TPAMI 2011；Pirsiavash 等 CVPR 2011；Bae \& Yoon CVPR 2014；Ge 等 TPAMI 2017。
+% citeturn0search4turn0search8turn0search1turn0search21turn1search1turn1search3turn1search2turn0search2
+
+实验一
+
+在当前数据上，第四章方法在 总体漏检率不高于 0.55、最大连续缺测长度不超过 6 时，仍然具有较强的片段拼接能力；重构后 FMI 基本保持在 0.924 以上，并且轨迹长度中位数可提升到重构前的 2.2–3.0 倍。
+当总体漏检率进一步升高到 0.65 时，方法开始明显退化；在这一漏检强度下，最大连续缺测长度从 3 增加到 4 后，重构后 FMI 从 0.893 下降到 0.866，簇数也明显偏离真实车辆数，因而可以把 “漏检率约 0.65 + 最大连续缺测长度达到 4” 视为本组实验中的明显失效起点。
+
+
+
+
+
+\chapter{总结与展望}
+
+\section{研究总结}
+
+
+
+\section{研究创新点总结}
+
+
+
+\section{研究局限与未来展望}
+
+
+
+\end{document}

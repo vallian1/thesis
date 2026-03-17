@@ -1,0 +1,4 @@
+scene,rule_acc,full_acc,rule_lane_acc,full_lane_acc,rule_jitter,full_jitter,rule_parallel_as_adj,full_parallel_as_adj
+hard_parallel,0.0,0.7805555555555556,0.0,0.7805555555555556,4.733333333333333,1.65,1.0,0.21944444444444444
+single_adjacent,1.0,0.9981481481481481,1.0,0.9981481481481481,0.0,0.03333333333333333,,
+single_normal,1.0,1.0,1.0,1.0,0.0,0.0,,

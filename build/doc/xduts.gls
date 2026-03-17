@@ -1,0 +1,198 @@
+
+ \begin{theglossary} 
+
+    \makeatletter\scan@allowedfalse
+
+  \item v1.26.0.0\efill 
+ \subitem General:\ 作者简介配置\pfill \hdclindex{73}{}{14}
+  \item v1.26.11.1\efill 
+ \subitem General:\ 带教导师与挂名导师\pfill \hdclindex{124}{}{22}
+  \item v1.26.11.2\efill 
+ \subitem General:\ 研究生信息推荐值\pfill \hdclindex{109}{}{19}
+  \item v6.1.0.0\efill 
+ \subitem General:\ 增加图表对齐接口\pfill \hdclindex{48}{}{12}
+  \item v6.1.1.1\efill 
+ \subitem General:\ 修正文档中页面移除值样式\pfill \hdclindex{109}{}{21}
+  \item v6.1.2.1\efill 
+ \subitem General:\ 修改文档交叉引用样式\pfill \hdpindex{}{1}
+  \item v6.1.4.1\efill 
+ \subitem General:\ 更新研究生信息推荐值\pfill \hdclindex{109}{}{19}
+  \item v6.1.4.2\efill 
+ \subitem General:\ 补充TeX Live内置字体文件名\pfill \hdclindex{10}{}{7}
+  \item v2.18.1.0\efill 
+ \subitem General:\ 增加专业博士信息录入推荐值来源\pfill 
+		\hdclindex{109}{}{19}
+      \subsubitem 增加专业博士校外导师和英文学位类别信息录入\pfill 
+		\hdclindex{74}{}{15}
+  \item v2.18.1.1\efill 
+ \subitem General:\ 隐藏源码、版本和索引\pfill \hdpindex{}{1}
+  \item v2.15.0.1\efill 
+ \subitem General:\ 增加赞助二维码\pfill \hdpindex{}{3}
+  \item v5.0.0.0\efill 
+ \subitem General:\ 精简算法接口名称\pfill \hdclindex{50}{}{12}
+      \subsubitem 精简部分信息录入接口名称\pfill 
+		\hdclindex{84}{}{17}
+  \item v1.17.0.1\efill 
+ \subitem General:\ 研究生学位论文提交日期格式\pfill \hdclindex{94}{}{18}
+  \item v2.12.0.1\efill 
+ \subitem General:\ 本科生毕业设计增加文件配置\pfill \hdpindex{}{5}
+      \subsubitem 研究生学位论文增加文件配置\pfill 
+		\hdpindex{}{5}
+  \item v2.12.1.0\efill 
+ \subitem General:\ 页面和信息移除选项增加分组\pfill \hdclindex{109}{}{21}
+  \item v2.12.1.1\efill 
+ \subitem General:\ 使用\clsx {l3doc}文档和实现环境\pfill \hdpindex{}{2}
+  \item v2.12.2.1\efill 
+ \subitem General:\ 调整研究生信息推荐值展示样式\pfill \hdclindex{109}{}{19}
+  \item v3.1.0.0\efill 
+ \subitem General:\ 设置算法三线间距\pfill \hdclindex{54}{}{12}
+  \item v3.1.1.1\efill 
+ \subitem General:\ 手册首页增加水印\pfill \hdpindex{}{1}
+  \item v3.1.1.2\efill 
+ \subitem General:\ 增加QQ支付二维码\pfill \hdpindex{}{3}
+  \item v3.1.1.3\efill 
+ \subitem General:\ 二维码增加图标\pfill \hdpindex{}{3}
+  \item v0.10.0.1\efill 
+ \subitem General:\ 补充表格内容字号文档说明\pfill \hdclindex{49}{}{12}
+  \item v2.0.0.0\efill 
+ \subitem General:\ 修改参考文献文件路径选项名称\pfill \hdclindex{105}{}{19}
+  \item v1.2.0.1\efill 
+ \subitem General:\ 增加GitHub Discussions\pfill \hdpindex{}{3}
+  \item v0.4.2.1\efill 
+ \subitem General:\ 调整文档目录缩进\pfill \hdpindex{}{1}
+  \item v0.1.4.1\efill 
+ \subitem General:\ 数学字体风格介绍\pfill \hdclindex{13}{}{8}
+  \item v1.30.0.0\efill 
+ \subitem General:\ 英文研究生学位论文标题\pfill \hdclindex{118}{}{21}
+  \item v1.30.0.1\efill 
+ \subitem General:\ 修改xdusetup配置文档\pfill \hdclindex{2}{}{6}
+      \subsubitem 移除info录入示例\pfill \hdpindex{}{5}
+  \item v1.30.0.2\efill 
+ \subitem General:\ 研究生学位论文文档\pfill \hdpindex{}{5}
+  \item v0.5.1.1\efill 
+ \subitem General:\ 增加xdusetup配置文档\pfill \hdclindex{2}{}{6}
+  \item v0.5.1.2\efill 
+ \subitem General:\ 增加编译说明\pfill \hdpindex{}{6}
+  \item v0.5.2.1\efill 
+ \subitem General:\ 修改项目名称\pfill \hdpindex{}{1}
+  \item v0.6.0.0\efill 
+ \subitem General:\ 增加xdufont宏包\pfill \hdpindex{}{1}
+  \item v1.0.0.0\efill 
+ \subitem General:\ 设置图、表、算法标签与后面标题之间的间距\pfill 
+		\hdclindex{45}{}{11}
+  \item v1.1.2.1\efill 
+ \subitem General:\ 增加默认值说明\pfill \hdpindex{}{3}
+  \item v1.3.0.1\efill 
+ \subitem General:\ 增加兼容性说明\pfill \hdpindex{}{5}
+  \item v1.3.1.1\efill 
+ \subitem General:\ 英文本科生毕业设计规范参考说明\pfill \hdpindex{}{4}
+  \item v1.4.0.0\efill 
+ \subitem General:\ 增加研究生学位论文\pfill \hdpindex{}{5}
+  \item v1.4.1.1\efill 
+ \subitem General:\ 修正子图适配宏包名称\pfill \hdpindex{}{5}
+  \item v1.9.0.0\efill 
+ \subitem General:\ 增加信息录入选项分类表\pfill \hdclindex{74}{}{15}
+      \subsubitem 增加研究生信息录入选项文档\pfill 
+		\hdclindex{74}{}{16}
+      \subsubitem 增大function环境盒子宽度\pfill \hdpindex{}{1}
+      \subsubitem 支持中文选项默认值加粗\pfill 
+		\hdpindex{}{1}
+  \item v1.10.3.1\efill 
+ \subitem General:\ 移除专业博士校外导师信息录入\pfill \hdclindex{74}{}{15}
+  \item v1.13.5.1\efill 
+ \subitem General:\ 补充子图引用样式文档\pfill \hdpindex{}{5}
+  \item v1.22.0.0\efill 
+ \subitem General:\ 符号对照表文件路径\pfill \hdclindex{103}{}{19}
+      \subsubitem 缩略语对照表文件路径\pfill 
+		\hdclindex{104}{}{19}
+  \item v1.28.4.1\efill 
+ \subitem General:\ 修正作者简介示例\pfill \hdclindex{73}{}{14}
+  \item v1.31.0.0\efill 
+ \subitem General:\ 修改\pkgx {biblatex}默认选项\pfill \hdclindex{20}{}{10}
+  \item v2.1.0.0\efill 
+ \subitem General:\ 声明页扫描文件路径\pfill \hdclindex{95}{}{18}
+  \item v2.2.0.0\efill 
+ \subitem General:\ 声明页签名文件路径\pfill \hdclindex{96}{}{18}
+  \item v2.2.1.1\efill 
+ \subitem General:\ 移除研究生学位论文中关于章节配置的文档\pfill 
+		\hdpindex{}{5}
+  \item v2.10.1.1\efill 
+ \subitem General:\ 相似性检测、盲审和抽查评估\pfill \hdclindex{124}{}{22}
+  \item v2.10.2.1\efill 
+ \subitem General:\ 修改对照表默认列格式\pfill \hdclindex{71}{}{14}
+  \item v2.14.0.0\efill 
+ \subitem General:\ 隐藏部分索引和对照表\pfill \hdclindex{124}{}{22}
+  \item v2.14.1.1\efill 
+ \subitem General:\ 修改示例代码样式\pfill \hdpindex{}{1}
+  \item v2.14.1.2\efill 
+ \subitem General:\ 修改示例代码缩进\pfill \hdpindex{}{1}
+      \subsubitem 增加示例代码换行符高亮\pfill 
+		\hdpindex{}{1}
+  \item v2.14.1.3\efill 
+ \subitem General:\ 修改文档措辞\pfill \hdpindex{}{3}
+  \item v2.16.1.1\efill 
+ \subitem General:\ 修改中文字体配置表文档样式\pfill \hdclindex{8}{}{7}
+      \subsubitem 修改信息录入选项分类表文档样式\pfill 
+		\hdclindex{74}{}{15}
+      \subsubitem 修改数学字体配置表文档样式\pfill 
+		\hdclindex{13}{}{8}
+      \subsubitem 修改英文字体配置表文档样式\pfill 
+		\hdclindex{11}{}{8}
+  \item v2.16.1.2\efill 
+ \subitem General:\ 修正文档中图片引用间距\pfill \hdpindex{}{3}
+  \item v2.16.1.3\efill 
+ \subitem General:\ 修改文档中caption字体样式\pfill \hdpindex{}{1}
+  \item v3.0.0.0\efill 
+ \subitem General:\ 设置图表caption对齐方式\pfill \hdclindex{47}{}{11}
+      \subsubitem 设置图表caption格式\pfill \hdclindex{46}{}{11}
+      \subsubitem 设置算法caption对齐方式\pfill 
+		\hdclindex{53}{}{12}
+      \subsubitem 设置算法caption格式\pfill \hdclindex{52}{}{12}
+  \item v4.0.0.0\efill 
+ \subitem General:\ 增加附录文件接口\pfill \hdclindex{106}{}{19}
+  \item v4.0.0.1\efill 
+ \subitem General:\ 增加使用建议\pfill \hdpindex{}{5}
+  \item v4.0.1.1\efill 
+ \subitem General:\ 增加支付宝红包二维码\pfill \hdpindex{}{3}
+  \item v4.1.1.0\efill 
+ \subitem General:\ 适配子表样式\pfill \hdpindex{}{5}
+  \item v4.1.1.1\efill 
+ \subitem General:\ 修正LOGO字形高度\pfill \hdpindex{}{1}
+  \item v4.3.0.1\efill 
+ \subitem General:\ 修改文档中关于参考文献的描述\pfill \hdpindex{}{6}
+  \item v4.3.0.2\efill 
+ \subitem General:\ 移除文档编译警告和消息\pfill \hdpindex{}{1}
+  \item v4.4.2.1\efill 
+ \subitem General:\ 修正接口文档说明样式\pfill \hdclindex{2}{}{6}
+  \item v4.4.5.1\efill 
+ \subitem General:\ 移除文档对xspace的依赖\pfill \hdpindex{}{1}
+  \item v4.4.5.2\efill 
+ \subitem General:\ 调整文档介绍顺序\pfill \hdpindex{}{3}
+  \item v4.4.5.4\efill 
+ \subitem General:\ 更新许可证版本号\pfill \hdpindex{}{1}
+  \item v4.4.5.5\efill 
+ \subitem General:\ 增加定理环境自定义建议\pfill \hdpindex{}{5}
+  \item v5.1.0.1\efill 
+ \subitem General:\ 修改文档内表格样式\pfill \hdpindex{}{1}
+  \item v5.4.0.1\efill 
+ \subitem General:\ 修正文档内英文字体配置表格错误\pfill 
+		\hdclindex{10}{}{7}
+  \item v6.0.0.0\efill 
+ \subitem General:\ 修正题名页键值\pfill \hdclindex{109}{}{21}
+  \item v6.0.1.1\efill 
+ \subitem General:\ 修正文档中部分标题书签字符\pfill \hdpindex{}{3}
+  \item v6.2.3.0\efill 
+ \subitem General:\ 修复本科生毕业设计三四五六级标题字号默认值\pfill 
+		\hdclindex{69}{}{13}
+  \item v6.2.3.1\efill 
+ \subitem General:\ 更新研究生信息推荐值来源\pfill \hdclindex{109}{}{19}
+  \item v6.2.6.1\efill 
+ \subitem General:\ 适配tabularray选择器语法\pfill \hdclindex{8}{}{7}
+  \item v6.2.6.2\efill 
+ \subitem General:\ 修改字体设置示例代码\pfill \hdclindex{2}{}{6}
+  \item v6.2.7.1\efill 
+ \subitem General:\ 移除贡献者和致谢并修改赞助位置\pfill \hdpindex{}{3}
+  \item v6.2.7.2\efill 
+ \subitem General:\ 修正xdufont使用范围说明\pfill \hdpindex{}{3}
+
+ \end{theglossary}

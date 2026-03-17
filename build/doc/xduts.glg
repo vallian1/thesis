@@ -1,0 +1,14 @@
+This is makeindex, version 2.17 [TeX Live 2025] (kpathsea + Thai support).
+Scanning style file d:/xiaoyingyong/TeX/texlive/2025/texmf-dist/makeindex/latex/gglo.ist........
+** Input style error (file = d:/xiaoyingyong/TeX/texlive/2025/texmf-dist/makeindex/latex/gglo.ist, line = 71):
+   -- Unknown specifier lethead_prefix.
+** Input style error (file = d:/xiaoyingyong/TeX/texlive/2025/texmf-dist/makeindex/latex/gglo.ist, line = 72):
+   -- Unknown specifier lethead_suffix.
+** Input style error (file = d:/xiaoyingyong/TeX/texlive/2025/texmf-dist/makeindex/latex/gglo.ist, line = 73):
+   -- Unknown specifier lethead_flag.
+......done (14 attributes redefined, 3 ignored).
+Scanning input file xduts.glo....done (95 entries accepted, 0 rejected).
+Sorting entries....done (618 comparisons).
+Generating output file xduts.gls....done (198 lines written, 0 warnings).
+Output written in xduts.gls.
+Transcript written in xduts.glg.

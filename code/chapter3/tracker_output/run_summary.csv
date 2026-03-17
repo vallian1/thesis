@@ -1,0 +1,3 @@
+file,n_events,n_raw_tracks,n_final_tracks,n_suppressed_tracks,min_track_points,max_skip_supported
+streamIn1215.txt,4971,1124,167,24,4,4
+streamIn1216.txt,3056,502,83,22,4,4

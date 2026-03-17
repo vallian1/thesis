@@ -1,0 +1,807 @@
+% $ biblatex auxiliary file $
+% $ biblatex bbl format version 3.3 $
+% Do not modify the above lines!
+%
+% This is an auxiliary file used by the 'biblatex' package.
+% This file may safely be deleted. It will be recreated by
+% biber as required.
+%
+\begingroup
+\makeatletter
+\@ifundefined{ver@biblatex.sty}
+  {\@latex@error
+     {Missing 'biblatex' package}
+     {The bibliography requires the 'biblatex' package.}
+      \aftergroup\endinput}
+  {}
+\endgroup
+
+
+\refsection{0}
+  \datalist[entry]{none/global//global/global/global}
+    \entry{readman2021potential}{article}{}{}
+      \name{author}{5}{}{%
+        {{hash=d509dd3b84b65c96b587555cc0692907}{%
+           family={Readman},
+           familyi={R\bibinitperiod},
+           given={Megan\bibnamedelima Rose},
+           giveni={M\bibinitperiod\bibinitdelim R\bibinitperiod}}}%
+        {{hash=16bb3fb2b5642920afe4fa9879d9be78}{%
+           family={Polden},
+           familyi={P\bibinitperiod},
+           given={Megan},
+           giveni={M\bibinitperiod}}}%
+        {{hash=d44d502883965c924144dd94651cdf22}{%
+           family={Gibbs},
+           familyi={G\bibinitperiod},
+           given={Melissa\bibnamedelima Chloe},
+           giveni={M\bibinitperiod\bibinitdelim C\bibinitperiod}}}%
+        {{hash=5c75d7a27d7c3601a06c7c9b8481bf5a}{%
+           family={Wareing},
+           familyi={W\bibinitperiod},
+           given={Lettie},
+           giveni={L\bibinitperiod}}}%
+        {{hash=7d5b91a798a47b42eeb989127e7096c6}{%
+           family={Crawford},
+           familyi={C\bibinitperiod},
+           given={Trevor\bibnamedelima J},
+           giveni={T\bibinitperiod\bibinitdelim J\bibinitperiod}}}%
+      }
+      \name{namea}{5}{}{%
+        {{hash=d509dd3b84b65c96b587555cc0692907}{%
+           family={Readman},
+           familyi={R\bibinitperiod},
+           given={Megan\bibnamedelima Rose},
+           giveni={M\bibinitperiod\bibinitdelim R\bibinitperiod}}}%
+        {{hash=16bb3fb2b5642920afe4fa9879d9be78}{%
+           family={Polden},
+           familyi={P\bibinitperiod},
+           given={Megan},
+           giveni={M\bibinitperiod}}}%
+        {{hash=d44d502883965c924144dd94651cdf22}{%
+           family={Gibbs},
+           familyi={G\bibinitperiod},
+           given={Melissa\bibnamedelima Chloe},
+           giveni={M\bibinitperiod\bibinitdelim C\bibinitperiod}}}%
+        {{hash=5c75d7a27d7c3601a06c7c9b8481bf5a}{%
+           family={Wareing},
+           familyi={W\bibinitperiod},
+           given={Lettie},
+           giveni={L\bibinitperiod}}}%
+        {{hash=7d5b91a798a47b42eeb989127e7096c6}{%
+           family={Crawford},
+           familyi={C\bibinitperiod},
+           given={Trevor\bibnamedelima J},
+           giveni={T\bibinitperiod\bibinitdelim J\bibinitperiod}}}%
+      }
+      \list{language}{1}{%
+        {english}%
+      }
+      \list{publisher}{1}{%
+        {MDPI}%
+      }
+      \strng{namehash}{042939406ddf1e92746a7f35a5dd2331}
+      \strng{fullhash}{648f466afb61f8d9c646d62703bee886}
+      \strng{fullhashraw}{648f466afb61f8d9c646d62703bee886}
+      \strng{bibnamehash}{1ffc8083f083dfe449c70f17b685eb84}
+      \strng{authorbibnamehash}{1ffc8083f083dfe449c70f17b685eb84}
+      \strng{authornamehash}{042939406ddf1e92746a7f35a5dd2331}
+      \strng{authorfullhash}{648f466afb61f8d9c646d62703bee886}
+      \strng{authorfullhashraw}{648f466afb61f8d9c646d62703bee886}
+      \strng{nameabibnamehash}{1ffc8083f083dfe449c70f17b685eb84}
+      \strng{nameanamehash}{042939406ddf1e92746a7f35a5dd2331}
+      \strng{nameafullhash}{648f466afb61f8d9c646d62703bee886}
+      \strng{nameafullhashraw}{648f466afb61f8d9c646d62703bee886}
+      \field{sortinit}{1}
+      \field{sortinithash}{4f6aaa89bab872aa0999fec09ff8e98a}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{journaltitle}{Brain sciences}
+      \field{langid}{english}
+      \field{languageid}{english}
+      \field{lansortorder}{4}
+      \field{number}{11}
+      \field{title}{The potential of naturalistic eye movement tasks in the diagnosis of Alzheimer’s disease: a review}
+      \field{usera}{J}
+      \field{userd}{english}
+      \field{userf}{english}
+      \field{volume}{11}
+      \field{year}{2021}
+      \field{dateera}{ce}
+      \field{pages}{1503}
+      \range{pages}{1}
+      \keyw{readman2021potential}
+    \endentry
+    \entry{noyes2023eye}{article}{}{}
+      \name{author}{6}{}{%
+        {{hash=a5f17a610407300bc7fa601539f089ac}{%
+           family={Noyes},
+           familyi={N\bibinitperiod},
+           given={Blake},
+           giveni={B\bibinitperiod}}}%
+        {{hash=46a288b3f30f892493da133e531e92b6}{%
+           family={Biorac},
+           familyi={B\bibinitperiod},
+           given={Aleks},
+           giveni={A\bibinitperiod}}}%
+        {{hash=371af52a63a5e679a41b1f0f39a58f75}{%
+           family={Vazquez},
+           familyi={V\bibinitperiod},
+           given={Gustavo},
+           giveni={G\bibinitperiod}}}%
+        {{hash=e89286bed7510077d77e304bdd0ee6e3}{%
+           family={Khalid-Khan},
+           familyi={K\bibinithyphendelim K\bibinitperiod},
+           given={Sarosh},
+           giveni={S\bibinitperiod}}}%
+        {{hash=f68f052fe73a5f9a820e45411db3fc9d}{%
+           family={Munoz},
+           familyi={M\bibinitperiod},
+           given={Douglas},
+           giveni={D\bibinitperiod}}}%
+        {{hash=40bec83acb82349f26142f08468c4cd0}{%
+           family={Booij},
+           familyi={B\bibinitperiod},
+           given={Linda},
+           giveni={L\bibinitperiod}}}%
+      }
+      \name{namea}{6}{}{%
+        {{hash=a5f17a610407300bc7fa601539f089ac}{%
+           family={Noyes},
+           familyi={N\bibinitperiod},
+           given={Blake},
+           giveni={B\bibinitperiod}}}%
+        {{hash=46a288b3f30f892493da133e531e92b6}{%
+           family={Biorac},
+           familyi={B\bibinitperiod},
+           given={Aleks},
+           giveni={A\bibinitperiod}}}%
+        {{hash=371af52a63a5e679a41b1f0f39a58f75}{%
+           family={Vazquez},
+           familyi={V\bibinitperiod},
+           given={Gustavo},
+           giveni={G\bibinitperiod}}}%
+        {{hash=e89286bed7510077d77e304bdd0ee6e3}{%
+           family={Khalid-Khan},
+           familyi={K\bibinithyphendelim K\bibinitperiod},
+           given={Sarosh},
+           giveni={S\bibinitperiod}}}%
+        {{hash=f68f052fe73a5f9a820e45411db3fc9d}{%
+           family={Munoz},
+           familyi={M\bibinitperiod},
+           given={Douglas},
+           giveni={D\bibinitperiod}}}%
+        {{hash=40bec83acb82349f26142f08468c4cd0}{%
+           family={Booij},
+           familyi={B\bibinitperiod},
+           given={Linda},
+           giveni={L\bibinitperiod}}}%
+      }
+      \list{language}{1}{%
+        {english}%
+      }
+      \list{publisher}{1}{%
+        {British Medical Journal Publishing Group}%
+      }
+      \strng{namehash}{7e118c584dac46de1081ffb753c58e7b}
+      \strng{fullhash}{9f76329884051ba2aa7edec7faa01e03}
+      \strng{fullhashraw}{9f76329884051ba2aa7edec7faa01e03}
+      \strng{bibnamehash}{85c5b4b47119cf21eb3b047e97402890}
+      \strng{authorbibnamehash}{85c5b4b47119cf21eb3b047e97402890}
+      \strng{authornamehash}{7e118c584dac46de1081ffb753c58e7b}
+      \strng{authorfullhash}{9f76329884051ba2aa7edec7faa01e03}
+      \strng{authorfullhashraw}{9f76329884051ba2aa7edec7faa01e03}
+      \strng{nameabibnamehash}{85c5b4b47119cf21eb3b047e97402890}
+      \strng{nameanamehash}{7e118c584dac46de1081ffb753c58e7b}
+      \strng{nameafullhash}{9f76329884051ba2aa7edec7faa01e03}
+      \strng{nameafullhashraw}{9f76329884051ba2aa7edec7faa01e03}
+      \field{sortinit}{2}
+      \field{sortinithash}{8b555b3791beccb63322c22f3320aa9a}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{journaltitle}{BMJ open}
+      \field{langid}{english}
+      \field{languageid}{english}
+      \field{lansortorder}{4}
+      \field{number}{6}
+      \field{title}{Eye-tracking in adult depression: protocol for a systematic review and meta-analysis}
+      \field{usera}{J}
+      \field{userd}{english}
+      \field{userf}{english}
+      \field{volume}{13}
+      \field{year}{2023}
+      \field{dateera}{ce}
+      \field{pages}{e069256}
+      \range{pages}{-1}
+      \keyw{noyes2023eye}
+    \endentry
+    \entry{salvucci2000identifying}{inproceedings}{}{}
+      \name{author}{2}{}{%
+        {{hash=4547eb40a1849b2111e9425a0083b294}{%
+           family={Salvucci},
+           familyi={S\bibinitperiod},
+           given={Dario\bibnamedelima D},
+           giveni={D\bibinitperiod\bibinitdelim D\bibinitperiod}}}%
+        {{hash=a6f3224965cda5a9851de8a327ef825c}{%
+           family={Goldberg},
+           familyi={G\bibinitperiod},
+           given={Joseph\bibnamedelima H},
+           giveni={J\bibinitperiod\bibinitdelim H\bibinitperiod}}}%
+      }
+      \name{namea}{2}{}{%
+        {{hash=4547eb40a1849b2111e9425a0083b294}{%
+           family={Salvucci},
+           familyi={S\bibinitperiod},
+           given={Dario\bibnamedelima D},
+           giveni={D\bibinitperiod\bibinitdelim D\bibinitperiod}}}%
+        {{hash=a6f3224965cda5a9851de8a327ef825c}{%
+           family={Goldberg},
+           familyi={G\bibinitperiod},
+           given={Joseph\bibnamedelima H},
+           giveni={J\bibinitperiod\bibinitdelim H\bibinitperiod}}}%
+      }
+      \list{language}{1}{%
+        {english}%
+      }
+      \strng{namehash}{e0e92892518f3e60aa9eeae4dc230c11}
+      \strng{fullhash}{02d80737857d09de97b0484626c22ec6}
+      \strng{fullhashraw}{02d80737857d09de97b0484626c22ec6}
+      \strng{bibnamehash}{02d80737857d09de97b0484626c22ec6}
+      \strng{authorbibnamehash}{02d80737857d09de97b0484626c22ec6}
+      \strng{authornamehash}{e0e92892518f3e60aa9eeae4dc230c11}
+      \strng{authorfullhash}{02d80737857d09de97b0484626c22ec6}
+      \strng{authorfullhashraw}{02d80737857d09de97b0484626c22ec6}
+      \strng{nameabibnamehash}{02d80737857d09de97b0484626c22ec6}
+      \strng{nameanamehash}{e0e92892518f3e60aa9eeae4dc230c11}
+      \strng{nameafullhash}{02d80737857d09de97b0484626c22ec6}
+      \strng{nameafullhashraw}{02d80737857d09de97b0484626c22ec6}
+      \field{sortinit}{3}
+      \field{sortinithash}{ad6fe7482ffbd7b9f99c9e8b5dccd3d7}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{booktitle}{Proceedings of the 2000 Symposium on Eye tracking Research \& Applications}
+      \field{langid}{english}
+      \field{languageid}{english}
+      \field{lansortorder}{4}
+      \field{title}{Identifying fixations and saccades in eye-tracking protocols}
+      \field{usera}{C}
+      \field{userd}{english}
+      \field{userf}{english}
+      \field{year}{2000}
+      \field{dateera}{ce}
+      \field{pages}{71\bibrangedash 78}
+      \range{pages}{8}
+      \keyw{salvucci2000identifying}
+    \endentry
+    \entry{zemblys2017eye}{inproceedings}{}{}
+      \name{author}{1}{}{%
+        {{hash=62685b2e807f93ea546b3745d4df8ac1}{%
+           family={Zemblys},
+           familyi={Z\bibinitperiod},
+           given={Raimondas},
+           giveni={R\bibinitperiod}}}%
+      }
+      \name{namea}{1}{}{%
+        {{hash=62685b2e807f93ea546b3745d4df8ac1}{%
+           family={Zemblys},
+           familyi={Z\bibinitperiod},
+           given={Raimondas},
+           giveni={R\bibinitperiod}}}%
+      }
+      \list{language}{1}{%
+        {english}%
+      }
+      \strng{namehash}{62685b2e807f93ea546b3745d4df8ac1}
+      \strng{fullhash}{62685b2e807f93ea546b3745d4df8ac1}
+      \strng{fullhashraw}{62685b2e807f93ea546b3745d4df8ac1}
+      \strng{bibnamehash}{62685b2e807f93ea546b3745d4df8ac1}
+      \strng{authorbibnamehash}{62685b2e807f93ea546b3745d4df8ac1}
+      \strng{authornamehash}{62685b2e807f93ea546b3745d4df8ac1}
+      \strng{authorfullhash}{62685b2e807f93ea546b3745d4df8ac1}
+      \strng{authorfullhashraw}{62685b2e807f93ea546b3745d4df8ac1}
+      \strng{nameabibnamehash}{62685b2e807f93ea546b3745d4df8ac1}
+      \strng{nameanamehash}{62685b2e807f93ea546b3745d4df8ac1}
+      \strng{nameafullhash}{62685b2e807f93ea546b3745d4df8ac1}
+      \strng{nameafullhashraw}{62685b2e807f93ea546b3745d4df8ac1}
+      \field{sortinit}{4}
+      \field{sortinithash}{9381316451d1b9788675a07e972a12a7}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{booktitle}{The 20th International Conference on Biomedical Engineering}
+      \field{langid}{english}
+      \field{languageid}{english}
+      \field{lansortorder}{4}
+      \field{number}{1}
+      \field{title}{Eye-movement event detection meets machine learning}
+      \field{usera}{C}
+      \field{userd}{english}
+      \field{userf}{english}
+      \field{volume}{20}
+      \field{year}{2017}
+      \field{dateera}{ce}
+      \field{pages}{98\bibrangedash 101}
+      \range{pages}{4}
+      \keyw{zemblys2017eye}
+    \endentry
+    \entry{pekkanen2017new}{article}{}{}
+      \name{author}{2}{}{%
+        {{hash=7908e6ef31975019998a89c03df3ab82}{%
+           family={Pekkanen},
+           familyi={P\bibinitperiod},
+           given={Jami},
+           giveni={J\bibinitperiod}}}%
+        {{hash=54a27d4e3b5947d72aef245e48c50150}{%
+           family={Lappi},
+           familyi={L\bibinitperiod},
+           given={Otto},
+           giveni={O\bibinitperiod}}}%
+      }
+      \name{namea}{2}{}{%
+        {{hash=7908e6ef31975019998a89c03df3ab82}{%
+           family={Pekkanen},
+           familyi={P\bibinitperiod},
+           given={Jami},
+           giveni={J\bibinitperiod}}}%
+        {{hash=54a27d4e3b5947d72aef245e48c50150}{%
+           family={Lappi},
+           familyi={L\bibinitperiod},
+           given={Otto},
+           giveni={O\bibinitperiod}}}%
+      }
+      \list{language}{1}{%
+        {english}%
+      }
+      \list{publisher}{1}{%
+        {Nature Publishing Group UK London}%
+      }
+      \strng{namehash}{85d12b718dd25acea18e32f349777a0f}
+      \strng{fullhash}{bc3234086f094974741e3572f5c67ea7}
+      \strng{fullhashraw}{bc3234086f094974741e3572f5c67ea7}
+      \strng{bibnamehash}{bc3234086f094974741e3572f5c67ea7}
+      \strng{authorbibnamehash}{bc3234086f094974741e3572f5c67ea7}
+      \strng{authornamehash}{85d12b718dd25acea18e32f349777a0f}
+      \strng{authorfullhash}{bc3234086f094974741e3572f5c67ea7}
+      \strng{authorfullhashraw}{bc3234086f094974741e3572f5c67ea7}
+      \strng{nameabibnamehash}{bc3234086f094974741e3572f5c67ea7}
+      \strng{nameanamehash}{85d12b718dd25acea18e32f349777a0f}
+      \strng{nameafullhash}{bc3234086f094974741e3572f5c67ea7}
+      \strng{nameafullhashraw}{bc3234086f094974741e3572f5c67ea7}
+      \field{sortinit}{4}
+      \field{sortinithash}{9381316451d1b9788675a07e972a12a7}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{journaltitle}{Scientific Reports}
+      \field{langid}{english}
+      \field{languageid}{english}
+      \field{lansortorder}{4}
+      \field{number}{1}
+      \field{title}{A new and general approach to signal denoising and eye movement classification based on segmented linear regression}
+      \field{usera}{J}
+      \field{userd}{english}
+      \field{userf}{english}
+      \field{volume}{7}
+      \field{year}{2017}
+      \field{dateera}{ce}
+      \field{pages}{17726}
+      \range{pages}{1}
+      \keyw{pekkanen2017new}
+    \endentry
+    \entry{hoppe2016end}{article}{}{}
+      \name{author}{2}{}{%
+        {{hash=ecef2c03fc9eb413994be233ff2f444d}{%
+           family={Hoppe},
+           familyi={H\bibinitperiod},
+           given={Sabrina},
+           giveni={S\bibinitperiod}}}%
+        {{hash=5153be8c2167a45315a4a73b5f626ab7}{%
+           family={Bulling},
+           familyi={B\bibinitperiod},
+           given={Andreas},
+           giveni={A\bibinitperiod}}}%
+      }
+      \name{namea}{2}{}{%
+        {{hash=ecef2c03fc9eb413994be233ff2f444d}{%
+           family={Hoppe},
+           familyi={H\bibinitperiod},
+           given={Sabrina},
+           giveni={S\bibinitperiod}}}%
+        {{hash=5153be8c2167a45315a4a73b5f626ab7}{%
+           family={Bulling},
+           familyi={B\bibinitperiod},
+           given={Andreas},
+           giveni={A\bibinitperiod}}}%
+      }
+      \list{language}{1}{%
+        {english}%
+      }
+      \strng{namehash}{bc85c04809783023a580febc6fe37a88}
+      \strng{fullhash}{dc388e9630ec88b62fa5135951ba5e69}
+      \strng{fullhashraw}{dc388e9630ec88b62fa5135951ba5e69}
+      \strng{bibnamehash}{dc388e9630ec88b62fa5135951ba5e69}
+      \strng{authorbibnamehash}{dc388e9630ec88b62fa5135951ba5e69}
+      \strng{authornamehash}{bc85c04809783023a580febc6fe37a88}
+      \strng{authorfullhash}{dc388e9630ec88b62fa5135951ba5e69}
+      \strng{authorfullhashraw}{dc388e9630ec88b62fa5135951ba5e69}
+      \strng{nameabibnamehash}{dc388e9630ec88b62fa5135951ba5e69}
+      \strng{nameanamehash}{bc85c04809783023a580febc6fe37a88}
+      \strng{nameafullhash}{dc388e9630ec88b62fa5135951ba5e69}
+      \strng{nameafullhashraw}{dc388e9630ec88b62fa5135951ba5e69}
+      \field{sortinit}{5}
+      \field{sortinithash}{20e9b4b0b173788c5dace24730f47d8c}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{journaltitle}{arXiv preprint arXiv:1609.02452}
+      \field{langid}{english}
+      \field{languageid}{english}
+      \field{lansortorder}{4}
+      \field{title}{End-to-end eye movement detection using convolutional neural networks}
+      \field{usera}{J}
+      \field{userd}{english}
+      \field{userf}{english}
+      \field{year}{2016}
+      \field{dateera}{ce}
+      \keyw{hoppe2016end}
+    \endentry
+    \entry{birawo2022review}{article}{}{}
+      \name{author}{2}{}{%
+        {{hash=a36b7cc8f378c0f65d6c3bb346811bb0}{%
+           family={Birawo},
+           familyi={B\bibinitperiod},
+           given={Birtukan},
+           giveni={B\bibinitperiod}}}%
+        {{hash=9914fa71fcc08ad95bc23539410a10f6}{%
+           family={Kasprowski},
+           familyi={K\bibinitperiod},
+           given={Pawel},
+           giveni={P\bibinitperiod}}}%
+      }
+      \name{namea}{2}{}{%
+        {{hash=a36b7cc8f378c0f65d6c3bb346811bb0}{%
+           family={Birawo},
+           familyi={B\bibinitperiod},
+           given={Birtukan},
+           giveni={B\bibinitperiod}}}%
+        {{hash=9914fa71fcc08ad95bc23539410a10f6}{%
+           family={Kasprowski},
+           familyi={K\bibinitperiod},
+           given={Pawel},
+           giveni={P\bibinitperiod}}}%
+      }
+      \list{language}{1}{%
+        {english}%
+      }
+      \list{publisher}{1}{%
+        {MDPI}%
+      }
+      \strng{namehash}{0a6727ddf310e7d3505ed56a2d78eabb}
+      \strng{fullhash}{22367bc739579f4de8aea1d0d58a2726}
+      \strng{fullhashraw}{22367bc739579f4de8aea1d0d58a2726}
+      \strng{bibnamehash}{22367bc739579f4de8aea1d0d58a2726}
+      \strng{authorbibnamehash}{22367bc739579f4de8aea1d0d58a2726}
+      \strng{authornamehash}{0a6727ddf310e7d3505ed56a2d78eabb}
+      \strng{authorfullhash}{22367bc739579f4de8aea1d0d58a2726}
+      \strng{authorfullhashraw}{22367bc739579f4de8aea1d0d58a2726}
+      \strng{nameabibnamehash}{22367bc739579f4de8aea1d0d58a2726}
+      \strng{nameanamehash}{0a6727ddf310e7d3505ed56a2d78eabb}
+      \strng{nameafullhash}{22367bc739579f4de8aea1d0d58a2726}
+      \strng{nameafullhashraw}{22367bc739579f4de8aea1d0d58a2726}
+      \field{sortinit}{5}
+      \field{sortinithash}{20e9b4b0b173788c5dace24730f47d8c}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{journaltitle}{Sensors}
+      \field{langid}{english}
+      \field{languageid}{english}
+      \field{lansortorder}{4}
+      \field{number}{22}
+      \field{title}{Review and evaluation of eye movement event detection algorithms}
+      \field{usera}{J}
+      \field{userd}{english}
+      \field{userf}{english}
+      \field{volume}{22}
+      \field{year}{2022}
+      \field{dateera}{ce}
+      \field{pages}{8810}
+      \range{pages}{1}
+      \keyw{birawo2022review}
+    \endentry
+    \entry{goltz2019exploring}{inproceedings}{}{}
+      \name{author}{3}{}{%
+        {{hash=81bb9d72b3f080b058ba14f287fd18bb}{%
+           family={Goltz},
+           familyi={G\bibinitperiod},
+           given={Jonas},
+           giveni={J\bibinitperiod}}}%
+        {{hash=10270f8eab5cb8696eb98a702dcb36f3}{%
+           family={Grossberg},
+           familyi={G\bibinitperiod},
+           given={Michael},
+           giveni={M\bibinitperiod}}}%
+        {{hash=19d233549982df14a8ab1f94f057b26c}{%
+           family={Etemadpour},
+           familyi={E\bibinitperiod},
+           given={Ronak},
+           giveni={R\bibinitperiod}}}%
+      }
+      \name{namea}{3}{}{%
+        {{hash=81bb9d72b3f080b058ba14f287fd18bb}{%
+           family={Goltz},
+           familyi={G\bibinitperiod},
+           given={Jonas},
+           giveni={J\bibinitperiod}}}%
+        {{hash=10270f8eab5cb8696eb98a702dcb36f3}{%
+           family={Grossberg},
+           familyi={G\bibinitperiod},
+           given={Michael},
+           giveni={M\bibinitperiod}}}%
+        {{hash=19d233549982df14a8ab1f94f057b26c}{%
+           family={Etemadpour},
+           familyi={E\bibinitperiod},
+           given={Ronak},
+           giveni={R\bibinitperiod}}}%
+      }
+      \list{language}{1}{%
+        {english}%
+      }
+      \strng{namehash}{762e239698bc17f95409a609da1096ce}
+      \strng{fullhash}{dc66841fea3ef3a73755e6bfe521bf77}
+      \strng{fullhashraw}{dc66841fea3ef3a73755e6bfe521bf77}
+      \strng{bibnamehash}{dc66841fea3ef3a73755e6bfe521bf77}
+      \strng{authorbibnamehash}{dc66841fea3ef3a73755e6bfe521bf77}
+      \strng{authornamehash}{762e239698bc17f95409a609da1096ce}
+      \strng{authorfullhash}{dc66841fea3ef3a73755e6bfe521bf77}
+      \strng{authorfullhashraw}{dc66841fea3ef3a73755e6bfe521bf77}
+      \strng{nameabibnamehash}{dc66841fea3ef3a73755e6bfe521bf77}
+      \strng{nameanamehash}{762e239698bc17f95409a609da1096ce}
+      \strng{nameafullhash}{dc66841fea3ef3a73755e6bfe521bf77}
+      \strng{nameafullhashraw}{dc66841fea3ef3a73755e6bfe521bf77}
+      \field{sortinit}{6}
+      \field{sortinithash}{b33bc299efb3c36abec520a4c896a66d}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{booktitle}{Proceedings of the 11th ACM Symposium on Eye Tracking Research \& Applications}
+      \field{langid}{english}
+      \field{languageid}{english}
+      \field{lansortorder}{4}
+      \field{title}{Exploring simple neural network architectures for eye movement classification}
+      \field{usera}{C}
+      \field{userd}{english}
+      \field{userf}{english}
+      \field{year}{2019}
+      \field{dateera}{ce}
+      \field{pages}{1\bibrangedash 5}
+      \range{pages}{5}
+      \keyw{goltz2019exploring}
+    \endentry
+    \entry{li2021attention}{inproceedings}{}{}
+      \name{author}{4}{}{%
+        {{hash=36e048e15c23aaede03a2cf46f6b124e}{%
+           family={Li},
+           familyi={L\bibinitperiod},
+           given={Xiaopan},
+           giveni={X\bibinitperiod}}}%
+        {{hash=7234e2dedde06eb74c4009f4fead5c9a}{%
+           family={Zhang},
+           familyi={Z\bibinitperiod},
+           given={Huazhen},
+           giveni={H\bibinitperiod}}}%
+        {{hash=03021a8b0558405b967148d19ea8972c}{%
+           family={Wu},
+           familyi={W\bibinitperiod},
+           given={Shiqian},
+           giveni={S\bibinitperiod}}}%
+        {{hash=e91bad151057916bf5426f1f2eab2a8f}{%
+           family={Fang},
+           familyi={F\bibinitperiod},
+           given={Hongping},
+           giveni={H\bibinitperiod}}}%
+      }
+      \name{namea}{4}{}{%
+        {{hash=36e048e15c23aaede03a2cf46f6b124e}{%
+           family={Li},
+           familyi={L\bibinitperiod},
+           given={Xiaopan},
+           giveni={X\bibinitperiod}}}%
+        {{hash=7234e2dedde06eb74c4009f4fead5c9a}{%
+           family={Zhang},
+           familyi={Z\bibinitperiod},
+           given={Huazhen},
+           giveni={H\bibinitperiod}}}%
+        {{hash=03021a8b0558405b967148d19ea8972c}{%
+           family={Wu},
+           familyi={W\bibinitperiod},
+           given={Shiqian},
+           giveni={S\bibinitperiod}}}%
+        {{hash=e91bad151057916bf5426f1f2eab2a8f}{%
+           family={Fang},
+           familyi={F\bibinitperiod},
+           given={Hongping},
+           giveni={H\bibinitperiod}}}%
+      }
+      \list{language}{1}{%
+        {english}%
+      }
+      \list{organization}{1}{%
+        {IEEE}%
+      }
+      \strng{namehash}{b631fadc4af6c75fa6728c693022069e}
+      \strng{fullhash}{3c791317f75ae39685a724b12774ae7e}
+      \strng{fullhashraw}{3c791317f75ae39685a724b12774ae7e}
+      \strng{bibnamehash}{eca697aac79b4831ce69d602311b5361}
+      \strng{authorbibnamehash}{eca697aac79b4831ce69d602311b5361}
+      \strng{authornamehash}{b631fadc4af6c75fa6728c693022069e}
+      \strng{authorfullhash}{3c791317f75ae39685a724b12774ae7e}
+      \strng{authorfullhashraw}{3c791317f75ae39685a724b12774ae7e}
+      \strng{nameabibnamehash}{eca697aac79b4831ce69d602311b5361}
+      \strng{nameanamehash}{b631fadc4af6c75fa6728c693022069e}
+      \strng{nameafullhash}{3c791317f75ae39685a724b12774ae7e}
+      \strng{nameafullhashraw}{3c791317f75ae39685a724b12774ae7e}
+      \field{sortinit}{6}
+      \field{sortinithash}{b33bc299efb3c36abec520a4c896a66d}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{booktitle}{2021 4th International Conference on Intelligent Autonomous Systems (ICoIAS)}
+      \field{langid}{english}
+      \field{languageid}{english}
+      \field{lansortorder}{4}
+      \field{title}{Attention model based {RNN} for automated eye-movement event detection}
+      \field{usera}{C}
+      \field{userd}{english}
+      \field{userf}{english}
+      \field{year}{2021}
+      \field{dateera}{ce}
+      \field{pages}{33\bibrangedash 38}
+      \range{pages}{6}
+      \keyw{li2021attention}
+    \endentry
+    \entry{zemblys2019gazenet}{article}{}{}
+      \name{author}{3}{}{%
+        {{hash=62685b2e807f93ea546b3745d4df8ac1}{%
+           family={Zemblys},
+           familyi={Z\bibinitperiod},
+           given={Raimondas},
+           giveni={R\bibinitperiod}}}%
+        {{hash=e58e700b27d33703c0daf0aa194566f9}{%
+           family={Niehorster},
+           familyi={N\bibinitperiod},
+           given={Diederick\bibnamedelima C},
+           giveni={D\bibinitperiod\bibinitdelim C\bibinitperiod}}}%
+        {{hash=90192fd4c61867acecba2e339dbf8265}{%
+           family={Holmqvist},
+           familyi={H\bibinitperiod},
+           given={Kenneth},
+           giveni={K\bibinitperiod}}}%
+      }
+      \name{namea}{3}{}{%
+        {{hash=62685b2e807f93ea546b3745d4df8ac1}{%
+           family={Zemblys},
+           familyi={Z\bibinitperiod},
+           given={Raimondas},
+           giveni={R\bibinitperiod}}}%
+        {{hash=e58e700b27d33703c0daf0aa194566f9}{%
+           family={Niehorster},
+           familyi={N\bibinitperiod},
+           given={Diederick\bibnamedelima C},
+           giveni={D\bibinitperiod\bibinitdelim C\bibinitperiod}}}%
+        {{hash=90192fd4c61867acecba2e339dbf8265}{%
+           family={Holmqvist},
+           familyi={H\bibinitperiod},
+           given={Kenneth},
+           giveni={K\bibinitperiod}}}%
+      }
+      \list{language}{1}{%
+        {english}%
+      }
+      \list{publisher}{1}{%
+        {Springer}%
+      }
+      \strng{namehash}{2b3ab2b045cb4a76871a9c1ad7c5c265}
+      \strng{fullhash}{6384f9802a8faad5a9b897b0adfec603}
+      \strng{fullhashraw}{6384f9802a8faad5a9b897b0adfec603}
+      \strng{bibnamehash}{6384f9802a8faad5a9b897b0adfec603}
+      \strng{authorbibnamehash}{6384f9802a8faad5a9b897b0adfec603}
+      \strng{authornamehash}{2b3ab2b045cb4a76871a9c1ad7c5c265}
+      \strng{authorfullhash}{6384f9802a8faad5a9b897b0adfec603}
+      \strng{authorfullhashraw}{6384f9802a8faad5a9b897b0adfec603}
+      \strng{nameabibnamehash}{6384f9802a8faad5a9b897b0adfec603}
+      \strng{nameanamehash}{2b3ab2b045cb4a76871a9c1ad7c5c265}
+      \strng{nameafullhash}{6384f9802a8faad5a9b897b0adfec603}
+      \strng{nameafullhashraw}{6384f9802a8faad5a9b897b0adfec603}
+      \field{sortinit}{7}
+      \field{sortinithash}{108d0be1b1bee9773a1173443802c0a3}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{journaltitle}{Behavior Research Methods}
+      \field{langid}{english}
+      \field{languageid}{english}
+      \field{lansortorder}{4}
+      \field{title}{{GazeNet}: End-to-end eye-movement event detection with deep neural networks}
+      \field{usera}{J}
+      \field{userd}{english}
+      \field{userf}{english}
+      \field{volume}{51}
+      \field{year}{2019}
+      \field{dateera}{ce}
+      \field{pages}{840\bibrangedash 864}
+      \range{pages}{25}
+      \keyw{zemblys2019gazenet}
+    \endentry
+    \entry{suhari2023improving}{inproceedings}{}{}
+      \name{author}{3}{}{%
+        {{hash=325b971ab5f27f2e783a6d5ac4184eda}{%
+           family={Suhari},
+           familyi={S\bibinitperiod},
+           given={Ahmad\bibnamedelima Riznandi},
+           giveni={A\bibinitperiod\bibinitdelim R\bibinitperiod}}}%
+        {{hash=0d18e11df6c745e4782e449b94e235f4}{%
+           family={Hartanto},
+           familyi={H\bibinitperiod},
+           given={Rudy},
+           giveni={R\bibinitperiod}}}%
+        {{hash=7aa6e3b0428376f7168b567bf5f225db}{%
+           family={Wibirama},
+           familyi={W\bibinitperiod},
+           given={Sunu},
+           giveni={S\bibinitperiod}}}%
+      }
+      \name{namea}{3}{}{%
+        {{hash=325b971ab5f27f2e783a6d5ac4184eda}{%
+           family={Suhari},
+           familyi={S\bibinitperiod},
+           given={Ahmad\bibnamedelima Riznandi},
+           giveni={A\bibinitperiod\bibinitdelim R\bibinitperiod}}}%
+        {{hash=0d18e11df6c745e4782e449b94e235f4}{%
+           family={Hartanto},
+           familyi={H\bibinitperiod},
+           given={Rudy},
+           giveni={R\bibinitperiod}}}%
+        {{hash=7aa6e3b0428376f7168b567bf5f225db}{%
+           family={Wibirama},
+           familyi={W\bibinitperiod},
+           given={Sunu},
+           giveni={S\bibinitperiod}}}%
+      }
+      \list{language}{1}{%
+        {english}%
+      }
+      \list{organization}{1}{%
+        {IEEE}%
+      }
+      \strng{namehash}{6a60e9e34091217a9bd2c5b6dc5d94b4}
+      \strng{fullhash}{766731ff00772be06f43aabcf51d36b4}
+      \strng{fullhashraw}{766731ff00772be06f43aabcf51d36b4}
+      \strng{bibnamehash}{766731ff00772be06f43aabcf51d36b4}
+      \strng{authorbibnamehash}{766731ff00772be06f43aabcf51d36b4}
+      \strng{authornamehash}{6a60e9e34091217a9bd2c5b6dc5d94b4}
+      \strng{authorfullhash}{766731ff00772be06f43aabcf51d36b4}
+      \strng{authorfullhashraw}{766731ff00772be06f43aabcf51d36b4}
+      \strng{nameabibnamehash}{766731ff00772be06f43aabcf51d36b4}
+      \strng{nameanamehash}{6a60e9e34091217a9bd2c5b6dc5d94b4}
+      \strng{nameafullhash}{766731ff00772be06f43aabcf51d36b4}
+      \strng{nameafullhashraw}{766731ff00772be06f43aabcf51d36b4}
+      \field{sortinit}{7}
+      \field{sortinithash}{108d0be1b1bee9773a1173443802c0a3}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{booktitle}{2023 International Conference on Advanced Mechatronics, Intelligent Manufacture and Industrial Automation (ICAMIMIA)}
+      \field{langid}{english}
+      \field{languageid}{english}
+      \field{lansortorder}{4}
+      \field{title}{Improving performance of eye movements classification using {CNN-Transformer} model}
+      \field{usera}{C}
+      \field{userd}{english}
+      \field{userf}{english}
+      \field{year}{2023}
+      \field{dateera}{ce}
+      \field{pages}{751\bibrangedash 756}
+      \range{pages}{6}
+      \keyw{suhari2023improving}
+    \endentry
+  \enddatalist
+  \missing{its_overview}
+  \missing{magnetic_sensor_traffic}
+  \missing{traffic_monitoring}
+  \missing{vehicle_event_application}
+\endrefsection
+\endinput
+

@@ -1,0 +1,19 @@
+{
+  "alpha": 1.0,
+  "beta": 0.15,
+  "gamma": 0.8,
+  "tau_kin": 11.83,
+  "tau_mag": 7.5,
+  "tau_score": -9.0,
+  "T_max": 9.0,
+  "q_gap": 0.12,
+  "rfrag_p": 0.35,
+  "rfrag_v": 0.45,
+  "p_lc": 0.1,
+  "dt_ref": 0.8,
+  "tau_E": 11.0,
+  "E_min": 0.05,
+  "kappa_E": 0.6,
+  "n_ref": 10,
+  "T_del": 13.0
+}
