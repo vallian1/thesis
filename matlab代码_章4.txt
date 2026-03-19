@@ -1,0 +1,806 @@
+%% RunCEDAS
+
+
+
+clear;
+
+% profile on;  % 开启性能分析
+
+% 参数设置
+decay = 0.000001; % 衰减因子
+
+% 2025.3.3 85个数据汇总_标签.xlsx 对数归一化 优化的值 CEDAS1
+% rad = 11.573;
+% weights = [0.35192    0.38106    0.029329    0.50981]; 
+% initDirection = [0.59369           0.082637];
+% refreshDirWei = [0.25683           0.34303];
+% scoreWei = [0.032742      5.1269];
+% startPreNum = 13.902;
+
+% 聚类结果的数量: 80 总体的 RI = 0.9960  JC = 0.7654  FMI = 0.8671 
+% 聚类结果的数量: 80 大车的 RI = 0.9957  JC = 0.7971  FMI = 0.8871 
+% 聚类结果的数量: 80 小车的 RI = 0.9845  JC = 0.7935  FMI = 0.8859 
+% 聚类结果的数量: 80 大车小车的加权 RI = 0.9869  JC = 0.7943  FMI = 0.8861 
+
+% 2025.3.3 85个数据汇总_标签.xlsx 对数归一化 优化的值 CEDAS1
+% rad = 0.18053;
+% weights = [0.36873    0.35803    0.23627    0.45407]; 
+% initDirection = [0.72665           0.17735];
+% %refreshDirWei = [0.22222           0.42393];
+% refreshDirWei = [0.25683           0.34303];
+% scoreWei = [0.00052025     4.6355];
+% startPreNum = 10.572;
+
+% 聚类结果的数量: 95 总体的 RI = 0.9966  JC = 0.7970  FMI = 0.8871 
+% 聚类结果的数量: 95 大车的 RI = 0.9963  JC = 0.8233  FMI = 0.9032 
+% 聚类结果的数量: 95 小车的 RI = 0.9845  JC = 0.7894  FMI = 0.8847 
+% 聚类结果的数量: 95 大车小车的加权 RI = 0.9871  JC = 0.7966  FMI = 0.8887 
+
+
+% 2025.3.3 85个数据汇总_标签.xlsx 对数归一化 优化的值 CEDAS2
+rad = 14.609;
+weights = [0.35923    0.37899    0.30661    0.40316]; 
+initDirection = [0.47258           0.046044];
+refreshDirWei = 0.40647;
+scoreWei = 0.1479;
+startPreNum = 14.502;
+centerWei = 0.71944;
+
+% 聚类结果的数量: 82 总体的 RI = 0.9960  JC = 0.7673  FMI = 0.8683 
+% 聚类结果的数量: 82 大车的 RI = 0.9961  JC = 0.8142  FMI = 0.8976 
+% 聚类结果的数量: 82 小车的 RI = 0.9802  JC = 0.7413  FMI = 0.8528 
+% 聚类结果的数量: 82 大车小车的加权 RI = 0.9836  JC = 0.7569  FMI = 0.8624 
+
+
+PATH = '../2025.3.3 85个数据汇总_标签.xlsx';
+
+% 数据加载与归一化
+%DataIn = readmatrix('../2025.2.25 大车数据合并_真实标签.xlsx');
+%DataIn = readmatrix('../2025.2.27 小车数据合并_真实标签.xlsx');
+%DataIn = readmatrix('../C26550、C26580真stream加磁场 .csv');
+%DataIn = readmatrix('../2025.2.27 大车小车数据合并_真实标签.xlsx');
+%DataIn = readmatrix('../2025.3.3 85个数据汇总_标签.xlsx');
+%DataIn = readmatrix('../2025.3.13 12.15换道整理.xlsx');
+%DataIn = readmatrix('../2025.3.13 12.16换道整理.xlsx');
+%DataIn = readmatrix('../2025.3.21 12.16换道整理 - 减少其他干扰值.xlsx');
+%DataIn = readmatrix('../2025.3.26 12.16原始数据(除去磁场方向unknow的值).xlsx');
+
+
+normalizedData = NormalizeDataFromFile(PATH,'LogNormalization');
+
+% 聚类处理
+
+% CE = CEDAS1(rad, ...
+%     decay, ...
+%     weights, ...
+%     initDirection, ...
+%     refreshDirWei, ...
+%     scoreWei, ...
+%     startPreNum); % 用于存储聚类结果
+
+CE = CEDAS2(rad, ...
+    decay, ...
+    weights, ...
+    initDirection, ...
+    refreshDirWei, ...
+    scoreWei, ...
+    centerWei, ...
+    startPreNum); % 用于存储聚类结果
+
+for t = 1:size(normalizedData, 1)
+    % 调用 CEDAS_demo3 算法
+    CE = CE.Clustering(normalizedData(t,:));
+end
+
+% 显示聚类结果
+ClustersImg(CE.clusters);
+
+
+%% 分别计算总体结果的标签 小车的标签 大车的标签
+ClusterDataTable = GetClusterDataTable(CE.clusters);
+littlevehicleDataTable = ClusterDataTable(ClusterDataTable(:,6)==1,:);
+bigvehicleDataTable = ClusterDataTable(ClusterDataTable(:,6)==2,:);
+
+trueLables = ClusterDataTable(:,5);
+clusterLables = ClusterDataTable(:,7);
+
+littlevehicletrueLables = littlevehicleDataTable(:,5);
+littlevehicleclusterLables = littlevehicleDataTable(:,7);
+bigvehicletrueLables = bigvehicleDataTable(:,5);
+bigvehicleclusterLables = bigvehicleDataTable(:,7);
+%% 分别计算总体 大车 小车的RI JC FMI
+
+[RI,JC,FMI]=GetRI_JC_FMI(trueLables,clusterLables);
+
+[littleRI,littleJC,littleFMI]=GetRI_JC_FMI(littlevehicletrueLables,littlevehicleclusterLables);
+[bigRI,bigJC,bigFMI]=GetRI_JC_FMI(bigvehicletrueLables,bigvehicleclusterLables);
+
+weightRI = 519/2414*littleRI + 1895/2414*bigRI;
+weightJC = 519/2414*littleJC + 1895/2414*bigJC;
+weightFMI = 519/2414*littleFMI + 1895/2414*bigFMI;
+
+
+fprintf('聚类结果的数量: %d 总体的 RI = %s JC = %s FMI = %s\n',...
+    length(CE.clusters),sprintf('%.4f ', RI),sprintf('%.4f ', JC),sprintf('%.4f ', FMI));
+fprintf('聚类结果的数量: %d 大车的 RI = %s JC = %s FMI = %s\n',...
+    length(CE.clusters),sprintf('%.4f ', littleRI),sprintf('%.4f ', littleJC),sprintf('%.4f ', littleFMI));
+fprintf('聚类结果的数量: %d 小车的 RI = %s JC = %s FMI = %s\n',...
+    length(CE.clusters),sprintf('%.4f ', bigRI),sprintf('%.4f ', bigJC),sprintf('%.4f ', bigFMI));
+fprintf('聚类结果的数量: %d 大车小车的加权 RI = %s JC = %s FMI = %s\n',...
+    length(CE.clusters),sprintf('%.4f ', weightRI),sprintf('%.4f ', weightJC),sprintf('%.4f ', weightFMI));
+%%
+
+
+
+%%%CEDAS2 
+
+classdef CEDAS2
+
+    % 更新方向性为两个变量
+    % 中心更新计算修改
+    properties(Access = public)
+        ID = 0;
+        clusters;
+        initDirection;
+        rad;
+        decay;
+        weights;
+        refreshDirWei;
+        scoreWei;
+        startPreNum;
+        centerWei;
+    end
+
+    methods(Access = public)
+        function obj = CEDAS2(rad, decay,weights,initDirection,refreshdirWei,scorewei,centerWei,startPreNum)
+           % 新建类，将簇初始化 初始长度为0
+           obj.clusters = struct('ID',{},'Color',{},'Data', {},'DataScore', {}, 'Centre', {},'allCenter',{}, 'allDirection', {}, 'Direction', {},'Life', {});
+           obj.rad = rad;
+           obj.decay = decay;
+           obj.weights = weights;
+           obj.initDirection = initDirection;
+           obj.refreshDirWei = refreshdirWei;
+           obj.scoreWei = scorewei;
+           obj.centerWei = centerWei;
+           obj.startPreNum = startPreNum;
+        end
+
+        function obj = Clustering(obj,sample)
+            % 如果是没有簇，则创建一个新簇
+            if(isempty(obj.clusters)) 
+                obj = obj.InitNewCluster(sample);
+                return;
+            end
+
+            % 计算当前数据与所有簇中心的加权距离，并筛选可关联的簇
+            numClusters = length(obj.clusters);
+            distances = inf(1, numClusters); % 预分配 distances 为无穷远
+            validClusters = false(1, numClusters); % 预分配逻辑索引数组
+ 
+            % 遍历所有簇
+            % fprintf(logtext, '此时簇的个数为%d个,对簇距离进行遍历: ',numClusters); % 写入日志文件
+            for i = 1:numClusters
+                if max(obj.clusters(i).Data(:, 1)) < sample(1) % % 取簇的第一列数据筛选符合条件的簇
+                    % 计算加权欧几里得距离
+                    if(length(obj.clusters(i).Data(:, 1)) >= obj.startPreNum)
+                        oA = obj.clusters(i).Data(end-1,1:3);
+                        oB = obj.clusters(i).Data(end,1:3);
+                        n = oB(1)-oA(1);
+
+                        pre = (oB-oA)/n*(sample(1)-oB(1))+oB;
+
+                        distances(i) = EuclideanDistance(obj.weights(1:3),sample(1:3),pre);
+
+                        % distances(i) = sqrt(sum((obj.weights(1:4) .* (sample(1:4) - [pre obj.clusters(i).Centre(4)])).^2));
+                    else
+                        distances(i) = EuclideanDistance(obj.weights(1:3),sample(1:3),obj.clusters(i).Centre(1:3));
+                        % distances(i) = sqrt(sum((obj.weights(1:4) .* (sample(1:4) - obj.clusters(i).Centre(1:4))).^2));
+                    end
+                    
+                    
+                    % fprintf(logtext, '与第%d个簇的距离为%.2f ',i,distances(i)); % 写入日志文件每次计算簇的距离
+                    validClusters(i) = distances(i) < obj.rad; % 记录满足距离条件的簇
+                else
+                    % fprintf(logtext, '第%d个簇第一列数据不满足要求 ',i); % 写入日志文件每次计算簇的距离
+                end
+        
+            end
+            
+            % 提取有效簇索引
+            validClusters = find(validClusters);
+            
+            % 如果没有满足条件的簇，则创建新簇
+            if isempty(validClusters)
+                obj = obj.InitNewCluster(sample);
+                % fprintf(logtext, '与所有簇的距离都大于聚类半径，创建新簇/n'); % 写入日志文件每次计算簇的距离
+                return;
+            end
+            
+            % 根据方向性和距离计算收益，并选择最佳匹配簇
+            bestScore = -inf;
+            bestClusterIdx = -1;
+            
+            sampleDirection = sample([1,3]); % 仅取第一维和第三维用于方向计算
+            
+            % fprintf(logtext, '对聚类半径之内的簇计算收益 '); % 写入日志文件每次计算簇的距离
+            for i = validClusters
+                % 计算方向性匹配度
+                direction_vector = sampleDirection - obj.clusters(i).Centre([1,3]);
+                dirNorm = norm(direction_vector);
+                
+                CosSim = dot(direction_vector, obj.clusters(i).Direction) / (dirNorm * norm(obj.clusters(i).Direction));
+                
+                % 归一化距离
+                NormDist = distances(i) / obj.rad;
+
+                % fprintf(logtext, '第%d个簇方向为%.2f ',i,CosSim);
+                
+                % 计算收益
+                score = obj.scoreWei * (1-NormDist) + (1 - obj.scoreWei) * CosSim;
+                % fprintf(logtext, '计算得到的收益为%.2f',score); % 写入日志文件每次计算簇的距离
+                % 更新最佳簇索引
+                if score > bestScore
+                    bestScore = score;
+                    bestClusterIdx = i;
+                end
+            end
+            
+            % 选择最佳簇或创建新簇
+            if bestScore > 0.3
+                obj = obj.AssignToCluster(bestClusterIdx, sample,bestScore,1/distances(bestClusterIdx),CosSim);
+                % fprintf(logtext, '收益最佳的簇为第%d个,且得分为%.2f,将数据加入到第%d个簇',bestClusterIdx,bestScore,bestClusterIdx); % 写入日志文件每次计算簇的距离
+            else
+                obj = obj.InitNewCluster(sample);
+                % fprintf(logtext, '所有得分没有超过0.3,形成新簇'); % 写入日志文件每次计算簇的距离
+            end
+            
+            % % 衰减簇生命值并移除失效簇
+            % obj.clusters(:).Life = [obj.clusters(:).Life] - obj.decay;
+            % index = find([obj.clusters(:).Life] <= 0);
+            % obj.clusters(index) = [];
+
+            % 衰减簇生命值
+            for i = 1:length(obj.clusters) % 倒序遍历以便移除
+                obj.clusters(i).Life = obj.clusters(i).Life - obj.decay;
+            end
+
+            % 移除失效簇
+            index = find([obj.clusters(:).Life] <= 0);
+            obj.clusters(index) = [];
+            % fprintf(logtext, '\n'); % 写入日志文件
+        end
+
+        % 初始化新簇
+        function obj = InitNewCluster(obj,newSample)
+
+            % 每次建立新簇就赋给该簇一个唯一ID 赋值完自增1;
+            newCluster.ID = obj.ID;
+            obj.ID = obj.ID + 1;
+            % 赋值给簇一个唯一的颜色 根据簇的ID
+            newCluster.Color = GetColorByIndex(newCluster.ID);
+
+            newCluster.Data = newSample;            % 新簇中仅包含当前数据
+            newCluster.DataScore = [inf inf inf];
+            
+            newCluster.Centre = newSample(1:3);          % 簇中心初始为当前数据
+            newCluster.Life = 1;                    % 初始生命周期
+            newCluster.Direction = obj.initDirection / sqrt(2); % 初始方向为均匀向量 应该不给车道号权重
+
+            % 记录簇的历史数据
+            newCluster.allCentre = newSample(1:3);
+            newCluster.allDirection = obj.initDirection / sqrt(2);
+            if isempty(obj.clusters)
+                obj.clusters = newCluster;
+            else
+                obj.clusters = [obj.clusters, newCluster];
+            end
+        end
+
+        % 将新数据分配到现有簇
+        function obj = AssignToCluster(obj,clusterIndex,newSample,bestScore,NormDist,CosSim)
+            % 分配数据到现有簇
+            obj.clusters(clusterIndex).Data = [obj.clusters(clusterIndex).Data; newSample]; % 加入新点
+            obj.clusters(clusterIndex).Life = 1; % 重置生命值
+
+            % 新数据的方向
+            direction = newSample(1:3) - obj.clusters(clusterIndex).Centre(1:3);
+
+            % 第一种更新中心值按照新来的点与之前中心的中间计算
+            obj.clusters(clusterIndex).Centre(1:3) = obj.clusters(clusterIndex).Centre(1:3) + obj.centerWei*direction;
+        
+            % 更新磁场值
+            % obj.clusters(clusterIndex).Centre(4) = mean([obj.clusters(clusterIndex).Centre(4) newSample(4)]);
+        
+            % 记录簇的历史中心
+            obj.clusters(clusterIndex).allCentre = [obj.clusters(clusterIndex).allCentre;obj.clusters(clusterIndex).Centre];
+
+            % 记录当前数据的得分情况
+            obj.clusters(clusterIndex).DataScore = [obj.clusters(clusterIndex).DataScore; bestScore NormDist CosSim];
+
+            % 更新方向性
+            obj = UpdateClusterDirection(obj,clusterIndex, newSample);
+        end
+
+        % 更新簇的方向性
+        function obj = UpdateClusterDirection(obj, clusterIndex,newSample)
+            % 使用当前簇方向和新样本的方向加权更新
+            direction = newSample([1,3]) - obj.clusters(clusterIndex).Centre([1,3]);
+            newDirection = obj.refreshDirWei * obj.clusters(clusterIndex).Direction + (1 - obj.refreshDirWei) * (direction / norm(direction));
+            obj.clusters(clusterIndex).Direction = newDirection / norm(newDirection); % 归一化
+            
+            % 记录历史方向数据
+            obj.clusters(clusterIndex).allDirection = [obj.clusters(clusterIndex).allDirection;obj.clusters(clusterIndex).Direction];
+        end
+    end
+end
+
+
+
+%%%%ClustersImg
+function ClustersImg(Clusters)
+    % 绘制聚类结果：同一簇内数据点按时间戳顺序连线
+    figure('Color','w');
+    hold on;
+    grid on;
+    view([-75.8182 5.3748]); % 设置三维视图
+    
+    numClusters = numel(Clusters);  % 获取簇数量
+
+    for idx2 = 1:numClusters
+
+        % 获取当前簇的所有数据点
+        ClusterData = Clusters(idx2).Data;
+        len = size(ClusterData, 1);
+
+        if len <= 6
+            continue;
+        end
+
+        % 复制一份用于绘图，避免改动原始数据
+        plotData = ClusterData;
+
+        % 车道数据缩小显示
+        plotData(:,2) = plotData(:,2) * 0.03;
+
+        % 按时间戳排序（默认第3列是时间）
+        plotData = sortrows(plotData, 3);
+
+        % 先画细线，把同一簇内点连接起来
+        plot3(plotData(:,1), plotData(:,2), plotData(:,3), ...
+              '-', ...
+              'Color', Clusters(idx2).Color, ...
+              'LineWidth', 0.8);
+
+        % 再画散点
+        scatter3(plotData(:,1), plotData(:,2), plotData(:,3), ...
+                 20, Clusters(idx2).Color, 'filled');
+    end
+
+    % 设置三维坐标轴标签
+    xlabel('位置归一化');
+    ylabel('车道归一化');
+    zlabel('时间归一化');
+
+    % 设置标题和显示配置
+    title('聚类结果可视化');
+    axis equal;
+    hold off;
+end
+
+
+% 版本1：最初trb版
+% function ClustersImg(Clusters)
+%     % 绘制聚类的结果
+%     figure;
+%     hold on;
+%     grid on;
+%     view([-75.8182 5.3748]); % 设置三维视图
+% 
+%     numClusters = size(Clusters,2);  % 获取簇数量
+% 
+% 
+%     % 绘制每个簇
+%     for idx2 = 1:numClusters
+% 
+%     % 获取当前簇的所有数据点
+%     ClusterData = Clusters(idx2).Data;
+%     length = size(ClusterData,1);
+%     if(length <= 6)
+%         continue;
+%     end
+% 
+%         for idx3 = 1 : length
+%             % 获取簇中的每个数据点
+%             data = ClusterData(idx3, :);
+% 
+%             % 车道数据缩小显示
+%             data(2) = data(2)*0.03;
+% 
+%             % 绘制当前簇的前三维数据点
+%             scatter3(data(1), data(2), data(3), ...
+%                      20, Clusters(idx2).Color, 'filled');
+%         end
+% 
+% 
+%         % 设置三维坐标轴标签
+%         xlabel('位置归一化');
+%         ylabel('车道归一化');
+%         zlabel('时间归一化');
+%     end
+% 
+%     % 设置标题和显示配置
+%     title('聚类结果可视化');
+%     axis equal; % 设置坐标轴等比例显示
+%     hold off;
+% end
+
+
+
+
+
+
+%%%%CEDAS
+classdef CEDAS
+    % 最原始的计算版本
+    properties(Access = public)
+        ID = 0;
+        clusters;
+        initDirection;
+        rad;
+        decay;
+        weights;
+        refreshDirWei;
+        scoreWei;
+        centerWei;
+    end
+
+    methods(Access = public)
+        function obj = CEDAS(rad, decay,weights,initDirection,refreshdirWei,scorewei,centerwei)
+           % 新建类，将簇初始化 初始长度为0
+           obj.clusters = struct('ID',{},'Color',{},'Data', {}, 'Centre', {},'allCenter',{}, 'allDirection', {}, 'Direction', {},'Life', {});
+           obj.rad = rad;
+           obj.decay = decay;
+           obj.weights = weights;
+           obj.initDirection = initDirection;
+           obj.refreshDirWei = refreshdirWei;
+           obj.scoreWei = scorewei;
+           obj.centerWei = centerwei;
+        end
+
+        function obj = Clustering(obj,sample)
+            % 如果是没有簇，则创建一个新簇
+            if(isempty(obj.clusters)) 
+                obj = obj.InitNewCluster(sample);
+                return;
+            end
+
+            % 计算当前数据与所有簇中心的加权距离，并筛选可关联的簇
+            numClusters = length(obj.clusters);
+            distances = inf(1, numClusters); % 预分配 distances 为无穷远
+            validClusters = false(1, numClusters); % 预分配逻辑索引数组
+ 
+            % 遍历所有簇
+            % fprintf(logtext, '此时簇的个数为%d个,对簇距离进行遍历: ',numClusters); % 写入日志文件
+            for i = 1:numClusters
+                if max(obj.clusters(i).Data(:, 1)) < sample(1) % % 取簇的第一列数据筛选符合条件的簇
+                    % 计算加权欧几里得距离
+                    distances(i) = sqrt(sum((obj.weights(1:4) .* (sample(1:4) - obj.clusters(i).Centre(1:4))).^2));
+                    % fprintf(logtext, '与第%d个簇的距离为%.2f ',i,distances(i)); % 写入日志文件每次计算簇的距离
+                    validClusters(i) = distances(i) < obj.rad; % 记录满足距离条件的簇
+                else
+                    % fprintf(logtext, '第%d个簇第一列数据不满足要求 ',i); % 写入日志文件每次计算簇的距离
+                end
+        
+            end
+            
+            % 提取有效簇索引
+            validClusters = find(validClusters);
+            
+            % 如果没有满足条件的簇，则创建新簇
+            if isempty(validClusters)
+                obj = obj.InitNewCluster(sample);
+                % fprintf(logtext, '与所有簇的距离都大于聚类半径，创建新簇/n'); % 写入日志文件每次计算簇的距离
+                return;
+            end
+            
+            % 根据方向性和距离计算收益，并选择最佳匹配簇
+            bestScore = -inf;
+            bestClusterIdx = -1;
+            
+            sampleDirection = sample(1:3); % 仅取前三维用于方向计算
+            
+            % fprintf(logtext, '对聚类半径之内的簇计算收益 '); % 写入日志文件每次计算簇的距离
+            for i = validClusters
+                % 计算方向性匹配度
+                direction_vector = sampleDirection - obj.clusters(i).Centre(1:3);
+                dirNorm = norm(direction_vector);
+                
+                CosSim = dot(direction_vector, obj.clusters(i).Direction) / (dirNorm * norm(obj.clusters(i).Direction));
+                
+                % 归一化距离
+                NormDist = distances(i) / obj.rad;
+
+                % fprintf(logtext, '第%d个簇方向为%.2f ',i,CosSim);
+                
+                % 计算收益
+                score = obj.scoreWei(1) * (1 - NormDist) + obj.scoreWei(2) * CosSim;
+                % fprintf(logtext, '计算得到的收益为%.2f',score); % 写入日志文件每次计算簇的距离
+                % 更新最佳簇索引
+                if score > bestScore
+                    bestScore = score;
+                    bestClusterIdx = i;
+                end
+            end
+            
+            % 选择最佳簇或创建新簇
+            if bestScore > 0.3
+                obj = obj.AssignToCluster(bestClusterIdx, sample);
+                % fprintf(logtext, '收益最佳的簇为第%d个,且得分为%.2f,将数据加入到第%d个簇',bestClusterIdx,bestScore,bestClusterIdx); % 写入日志文件每次计算簇的距离
+            else
+                obj = obj.InitNewCluster(sample);
+                % fprintf(logtext, '所有得分没有超过0.3,形成新簇'); % 写入日志文件每次计算簇的距离
+            end
+            
+            % % 衰减簇生命值并移除失效簇
+            % obj.clusters(:).Life = [obj.clusters(:).Life] - obj.decay;
+            % index = find([obj.clusters(:).Life] <= 0);
+            % obj.clusters(index) = [];
+
+            % 衰减簇生命值
+            for i = 1:length(obj.clusters) % 倒序遍历以便移除
+                obj.clusters(i).Life = obj.clusters(i).Life - obj.decay;
+            end
+
+            % 移除失效簇
+            index = find([obj.clusters(:).Life] <= 0);
+            obj.clusters(index) = [];
+            % fprintf(logtext, '\n'); % 写入日志文件
+        end
+
+        % 初始化新簇
+        function obj = InitNewCluster(obj,newSample)
+
+            % 每次建立新簇就赋给该簇一个唯一ID 赋值完自增1;
+            newCluster.ID = obj.ID;
+            obj.ID = obj.ID + 1;
+            % 赋值给簇一个唯一的颜色 根据簇的ID
+            newCluster.Color = GetColorByIndex(newCluster.ID);
+
+            newCluster.Data = newSample;            % 新簇中仅包含当前数据
+            newCluster.Centre = newSample(1:4);          % 簇中心初始为当前数据
+            newCluster.Life = 1;                    % 初始生命周期
+            newCluster.Direction = obj.initDirection / sqrt(3); % 初始方向为均匀向量 应该不给车道号权重
+
+            % 记录簇的历史数据
+            newCluster.allCentre = newSample(1:4);
+            newCluster.allDirection = obj.initDirection / sqrt(3);
+            if isempty(obj.clusters)
+                obj.clusters = newCluster;
+            else
+                obj.clusters = [obj.clusters, newCluster];
+            end
+        end
+
+        % 将新数据分配到现有簇
+        function obj = AssignToCluster(obj,clusterIndex,newSample)
+            % 分配数据到现有簇
+            obj.clusters(clusterIndex).Data = [obj.clusters(clusterIndex).Data; newSample]; % 加入新点
+            obj.clusters(clusterIndex).Life = 1; % 重置生命值
+        
+            % 更新簇中心
+            direction = (newSample(1:3) - obj.clusters(clusterIndex).Centre(1:3)) / obj.rad;
+            obj.clusters(clusterIndex).Centre(1:3) = obj.centerWei(1) * obj.clusters(clusterIndex).Centre(1:3) + obj.centerWei(2) * direction; %增加新加入
+        
+            % 更新磁场值
+            obj.clusters(clusterIndex).Centre(4) = mean([obj.clusters(clusterIndex).Centre(4) newSample(4)]);
+        
+            % 记录簇的历史中心
+            obj.clusters(clusterIndex).allCentre = [obj.clusters(clusterIndex).allCentre;obj.clusters(clusterIndex).Centre];
+
+            % 更新方向性
+            obj = UpdateClusterDirection(obj,clusterIndex, newSample);
+        end
+
+        % 更新簇的方向性
+        function obj = UpdateClusterDirection(obj, clusterIndex,newSample)
+            % 使用当前簇方向和新样本的方向加权更新
+            direction = newSample(1:3) - obj.clusters(clusterIndex).Centre(1:3);
+            newDirection = obj.refreshDirWei(1) * obj.clusters(clusterIndex).Direction + obj.refreshDirWei(2) * (direction / norm(direction));
+            obj.clusters(clusterIndex).Direction = newDirection / norm(newDirection); % 归一化
+            
+            % 记录历史方向数据
+            obj.clusters(clusterIndex).allDirection = [obj.clusters(clusterIndex).allDirection;obj.clusters(clusterIndex).Direction];
+        end
+    end
+end
+
+
+
+
+
+%%%%draw_microcluster_demo
+%% 仿照示意图绘制“数据与微簇 / 图结构”
+% 说明：
+% 1) 数据为人工构造，只求风格相似，不追求与原图完全一致
+% 2) 左图：散点 + 半透明微簇圆 + 编号
+% 3) 右图：微簇图结构（节点 + 连边 + 编号）
+% 4) 中文字体若乱码，请把 fontName 改成你电脑里可用的中文字体
+
+clear; clc; close all;
+rng(1);   % 固定随机种子，保证每次结果一致
+
+%% =========================
+%  基本设置
+% ==========================
+fontName = 'Microsoft YaHei';   % 若乱码可改为 'SimHei'、'宋体'、'Songti SC'
+
+% 颜色
+redC   = [0.90 0.25 0.25];
+greenC = [0.20 0.75 0.20];
+edgeC  = [0.45 0.70 0.90];
+bgC    = [1 1 1];
+
+%% =========================
+%  左图：数据与微簇
+% ==========================
+% 8个微簇中心，1~4 属于红色簇，5~8 属于绿色簇
+centers = [...
+    0.28 0.18;   % 1
+    0.23 0.15;   % 2
+    0.16 0.27;   % 3
+    0.20 0.22;   % 4
+    0.60 0.63;   % 5
+    0.70 0.70;   % 6
+    0.75 0.60;   % 7
+    0.64 0.66];  % 8
+
+% 每个微簇的半径
+r = [0.10 0.09 0.10 0.09 0.08 0.09 0.08 0.08];
+
+% 微簇所属大类：1=红，2=绿
+group = [1 1 1 1 2 2 2 2];
+
+% 给每个微簇生成一些散点
+X = cell(8,1);
+Y = cell(8,1);
+nPts = [45 40 50 45 35 40 35 38];
+for i = 1:8
+    s = 0.025; % 散点离散程度
+    X{i} = centers(i,1) + s * randn(nPts(i),1);
+    Y{i} = centers(i,2) + s * randn(nPts(i),1);
+end
+
+% 少量背景噪声
+noise = [rand(40,1), rand(40,1)];
+
+%% =========================
+%  右图：图结构
+% ==========================
+% 为了让图结构更像示意图，单独设置节点位置
+Gpos = [...
+    0.74 0.35;   % 1
+    0.78 0.82;   % 2
+    0.92 0.10;   % 3
+    0.62 0.56;   % 4
+    0.30 0.30;   % 5
+    0.50 0.62;   % 6
+    0.22 0.90;   % 7
+    0.58 0.08];  % 8
+
+% 边：两个连通分量（红色簇和绿色簇）
+E = [...
+    1 2;
+    1 4;
+    2 4;
+    1 3;
+    5 6;
+    6 7;
+    5 7;
+    5 8;
+    6 8];
+
+%% =========================
+%  开始绘图
+% ==========================
+figure('Color',bgC,'Position',[100 100 1200 500]);
+
+%% -------- 左图 --------
+subplot(1,2,1); hold on; box on; axis equal;
+set(gca,'FontName',fontName,'LineWidth',1,'Color',bgC);
+xlim([0 1]); ylim([0 1]);
+xlabel('X 数据','FontName',fontName,'FontSize',12);
+ylabel('Y 数据','FontName',fontName,'FontSize',12);
+title('数据与微簇','FontName',fontName,'FontSize',13,'FontWeight','bold');
+
+% 背景噪声
+scatter(noise(:,1), noise(:,2), 8, [0.75 0.75 0.75], 'filled');
+
+% 半透明圆 + 散点 + 编号
+theta = linspace(0,2*pi,300);
+for i = 1:8
+    if group(i) == 1
+        c = redC;
+    else
+        c = greenC;
+    end
+
+    % 半透明微簇圆
+    fill(centers(i,1) + r(i)*cos(theta), ...
+         centers(i,2) + r(i)*sin(theta), ...
+         c, ...
+         'FaceAlpha',0.22, ...
+         'EdgeColor','none');
+
+    % 圆边
+    plot(centers(i,1) + r(i)*cos(theta), ...
+         centers(i,2) + r(i)*sin(theta), ...
+         '-', 'Color', c*0.85, 'LineWidth',1.2);
+
+    % 微簇内部散点
+    scatter(X{i}, Y{i}, 12, c, 'filled');
+
+    % 编号
+    text(centers(i,1), centers(i,2), num2str(i), ...
+        'HorizontalAlignment','center', ...
+        'VerticalAlignment','middle', ...
+        'FontName',fontName, ...
+        'FontSize',11, ...
+        'FontWeight','bold');
+end
+
+% 子图标注
+text(0.5, -0.16, '(a) 数据与微簇', ...
+    'Units','normalized', ...
+    'HorizontalAlignment','center', ...
+    'FontName',fontName, ...
+    'FontSize',14);
+
+%% -------- 右图 --------
+subplot(1,2,2); hold on; box on; axis equal;
+set(gca,'FontName',fontName,'LineWidth',1,'Color',bgC);
+xlim([0 1]); ylim([0 1]);
+set(gca,'XTick',[],'YTick',[]);
+title('微簇图结构','FontName',fontName,'FontSize',13,'FontWeight','bold');
+
+% 先画边
+for k = 1:size(E,1)
+    i = E(k,1);
+    j = E(k,2);
+    plot([Gpos(i,1), Gpos(j,1)], ...
+         [Gpos(i,2), Gpos(j,2)], ...
+         '-', 'Color', edgeC, 'LineWidth',1.5);
+end
+
+% 再画节点和编号
+for i = 1:8
+    if group(i) == 1
+        c = redC;
+    else
+        c = greenC;
+    end
+
+    plot(Gpos(i,1), Gpos(i,2), 'o', ...
+        'MarkerSize',7, ...
+        'MarkerFaceColor',c, ...
+        'MarkerEdgeColor','none');
+
+    text(Gpos(i,1)+0.015, Gpos(i,2)+0.015, num2str(i), ...
+        'FontName',fontName, ...
+        'FontSize',10);
+end
+
+% 子图标注
+text(0.5, -0.16, '(b) 图结构', ...
+    'Units','normalized', ...
+    'HorizontalAlignment','center', ...
+    'FontName',fontName, ...
+    'FontSize',14);
+
+%% =========================
+%  保存图片
+% ==========================
+set(gcf,'InvertHardcopy','off');  % 保持背景色
+saveas(gcf, '微簇示意图_中文.png');
+
+% 如果你的 MATLAB 支持 exportgraphics，也可以取消下面注释获得更高清图片
+% exportgraphics(gcf, '微簇示意图_中文.png', 'Resolution', 300);

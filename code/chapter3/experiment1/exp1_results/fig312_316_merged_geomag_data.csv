@@ -1,0 +1,13 @@
+﻿L,avg_buffer_events_reconstructed,avg_output_delay_s_placeholder,consistency,delta_T_s,group,late_absorb_ratio,same_vehicle_ratio,tracking_accuracy_placeholder
+,,0.18,,0.3,delta_T_scan,,0.0,0.832
+,,0.27,,0.5,delta_T_scan,,0.0,0.861
+,,0.37,,0.7,delta_T_scan,,0.065,0.892
+,,0.5,,0.9,delta_T_scan,,0.252,0.914
+,,0.63,,1.1,delta_T_scan,,0.389,0.921
+,,0.77,,1.3,delta_T_scan,,0.48,0.915
+0.0,1.5517,,0.462,,L_scan,0.297,,
+1.0,2.95,,0.5121,,L_scan,0.3937,,
+2.0,5.15,,0.5878,,L_scan,0.525,,
+3.0,7.7,,0.6482,,L_scan,0.6272,,
+4.0,11.1,,0.7064,,L_scan,0.7194,,
+5.0,14.6682,,0.7456,,L_scan,0.7824,,

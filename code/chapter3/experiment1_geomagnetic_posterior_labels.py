@@ -17,6 +17,12 @@ from typing import Dict, List, Tuple, Optional
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
+from matplotlib.font_manager import FontProperties
+
+FONT_PROP = FontProperties()
+
+plt.rcParams['font.sans-serif'] = ['SimHei', 'DejaVu Sans']
+plt.rcParams['axes.unicode_minus'] = False
 
 # ---------------- empirical calibration ----------------
 
@@ -620,7 +626,8 @@ def plot_posterior_curve_hybrid(
     上图：使用调优版检测概率结果
     下图：使用当前版虚警概率结果
     """
-    plt.rcParams['font.sans-serif'] = ['SimHei', 'Microsoft YaHei', 'Noto Sans CJK SC', 'DejaVu Sans']
+    plt.rcParams['font.family'] = 'sans-serif'
+    plt.rcParams['font.sans-serif'] = ['SimHei', 'DejaVu Sans']
     plt.rcParams['axes.unicode_minus'] = False
 
     fig, axes = plt.subplots(2, 1, figsize=(11.5, 7.2), sharex=True)
@@ -640,14 +647,14 @@ def plot_posterior_curve_hybrid(
         color='#1f77b4',
         linestyle='--',
         linewidth=2.0,
-        label='全局统一后验'
+        label='地磁传感器固定参数后验'
     )
     ax.plot(
         ts_top_full['sec'],
         ts_top_full['pd_hat'],
         color='#d62728',
         linewidth=2.0,
-        label='节点自适应后验'
+        label='地磁传感器自适应后验'
     )
     ax.fill_between(
         ts_top_full['sec'],
@@ -657,10 +664,10 @@ def plot_posterior_curve_hybrid(
         alpha=0.18,
         label='95%置信区间'
     )
-    ax.set_title('节点检测概率后验估计曲线')
-    ax.set_ylabel('检测概率 $p_D$')
+    ax.set_title('地磁传感器检测概率后验估计曲线', fontproperties=FONT_PROP)
+    ax.set_ylabel('检测概率 $p_D$', fontproperties=FONT_PROP)
     ax.grid(alpha=0.28)
-    ax.legend(ncol=4, fontsize=10, loc='lower right', framealpha=0.92)
+    ax.legend(ncol=4, fontsize=10, loc='lower right', framealpha=0.92, prop=FONT_PROP)
 
     # ===== 下图：虚警概率 =====
     ax = axes[1]
@@ -677,14 +684,14 @@ def plot_posterior_curve_hybrid(
         color='#1f77b4',
         linestyle='--',
         linewidth=2.0,
-        label='全局统一后验'
+        label='地磁传感器固定参数后验'
     )
     ax.plot(
         ts_bottom_full['sec'],
         ts_bottom_full['pf_hat'],
         color='#d62728',
         linewidth=2.0,
-        label='节点自适应后验'
+        label='地磁传感器自适应后验'
     )
     ax.fill_between(
         ts_bottom_full['sec'],
@@ -694,11 +701,11 @@ def plot_posterior_curve_hybrid(
         alpha=0.18,
         label='95%置信区间'
     )
-    ax.set_title('节点虚警概率后验估计曲线')
-    ax.set_ylabel('虚警概率 $p_F$')
-    ax.set_xlabel('时间 / s')
+    ax.set_title('地磁传感器虚警概率后验估计曲线', fontproperties=FONT_PROP)
+    ax.set_ylabel('虚警概率 $p_F$', fontproperties=FONT_PROP)
+    ax.set_xlabel('时间 / s', fontproperties=FONT_PROP)
     ax.grid(alpha=0.28)
-    ax.legend(ncol=4, fontsize=10, loc='upper right', framealpha=0.92)
+    ax.legend(ncol=4, fontsize=10, loc='upper right', framealpha=0.92, prop=FONT_PROP)
 
     plt.tight_layout()
     plt.savefig(out_path, dpi=220, bbox_inches='tight')
@@ -735,19 +742,20 @@ def plot_innovation_vs_reliability(point_df: pd.DataFrame, out_path: str):
     groups = [df.loc[bins == b, 'innovation_var'].values for b in bins.cat.categories]
 
     # 设置中文字体（避免中文乱码）
-    plt.rcParams['font.sans-serif'] = ['SimHei']
+    plt.rcParams['font.family'] = 'sans-serif'
+    plt.rcParams['font.sans-serif'] = ['SimHei', 'DejaVu Sans']
     plt.rcParams['axes.unicode_minus'] = False
 
-    fig, ax = plt.subplots(figsize=(8.5, 5.0))
+    fig, ax = plt.subplots(figsize=(7, 4.5))
 
     ax.boxplot(groups, labels=[str(c) for c in bins.cat.categories], showfliers=False)
 
     # ===== 中文坐标轴 =====
-    ax.set_xlabel('节点可靠性区间 (reliability)')
-    ax.set_ylabel('创新方差 (innovation variance)')
+    ax.set_xlabel('地磁传感器可靠性区间 (reliability)', fontproperties=FONT_PROP)
+    ax.set_ylabel('创新方差 (innovation variance)', fontproperties=FONT_PROP)
 
     # ===== 中文标题 =====
-    ax.set_title('创新方差与节点可靠性关系')
+    ax.set_title('创新方差与地磁传感器可靠性关系', fontproperties=FONT_PROP)
 
     ax.grid(axis='y', alpha=0.3)
 
@@ -765,54 +773,71 @@ def plot_degradation_impact(df: pd.DataFrame, out_path: str):
 
     name_map = {
         'rule': '规则基线方法',
-        'global': '全局统一后验方法',
-        'full': '节点自适应后验方法',
+        'global': '地磁传感器固定参数后验',
+        'full': '地磁传感器自适应后验',
     }
 
-    plt.rcParams['font.sans-serif'] = ['SimHei', 'Microsoft YaHei', 'Noto Sans CJK SC', 'DejaVu Sans']
+    plt.rcParams['font.family'] = 'sans-serif'
+    plt.rcParams['font.sans-serif'] = ['SimHei', 'DejaVu Sans']
     plt.rcParams['axes.unicode_minus'] = False
 
-    fig, axes = plt.subplots(1, 2, figsize=(11.5, 4.8), sharex=True)
+    # 图 3.81: 身份切换次数
+    fig1, ax1 = plt.subplots(figsize=(6, 4.5))
 
     for method in ['rule', 'global', 'full']:
         sub = agg[agg['method'] == method].sort_values('severity')
         x = sub['severity'].to_numpy()
         y1 = sub['IDSW'].to_numpy()
-        y2 = sub['FalseDelete'].to_numpy()
 
-        # 插值增强显示效果
         if len(x) >= 3:
             x_dense = np.linspace(x.min(), x.max(), 101)
             y1_dense = np.interp(x_dense, x, y1)
-            y2_dense = np.interp(x_dense, x, y2)
         else:
-            x_dense, y1_dense, y2_dense = x, y1, y2
+            x_dense, y1_dense = x, y1
 
-        axes[0].plot(x_dense, y1_dense, linewidth=2.2, label=name_map[method])
-        axes[0].plot(x, y1, linestyle='None', marker='o', markersize=4.5)
+        ax1.plot(x_dense, y1_dense, linewidth=2.2, label=name_map[method])
+        ax1.plot(x, y1, linestyle='None', marker='o', markersize=4.5)
 
-        axes[1].plot(x_dense, y2_dense, linewidth=2.2, label=name_map[method])
-        axes[1].plot(x, y2, linestyle='None', marker='o', markersize=4.5)
-
-    axes[0].set_title('节点退化强度对身份切换次数的影响')
-    axes[0].set_xlabel('节点退化强度系数')
-    axes[0].set_ylabel('身份切换次数 / 次')
-    axes[0].set_xlim(-0.02, 1.02)
-    axes[0].set_xticks(np.arange(0.0, 1.01, 0.10))
-    axes[0].grid(alpha=0.28)
-    axes[0].legend(fontsize=9.5, framealpha=0.92)
-
-    axes[1].set_title('节点退化强度对误删轨次数的影响')
-    axes[1].set_xlabel('节点退化强度系数')
-    axes[1].set_ylabel('误删轨次数 / 次')
-    axes[1].set_xlim(-0.02, 1.02)
-    axes[1].set_xticks(np.arange(0.0, 1.01, 0.10))
-    axes[1].grid(alpha=0.28)
-    axes[1].legend(fontsize=9.5, framealpha=0.92)
+    ax1.set_title('图 3.81 地磁传感器检测能力下降程度与杂波强度对身份切换次数的影响', fontproperties=FONT_PROP)
+    ax1.set_xlabel('地磁传感器检测能力下降程度与杂波强度', fontproperties=FONT_PROP)
+    ax1.set_ylabel('身份切换次数 / 次', fontproperties=FONT_PROP)
+    ax1.set_xlim(-0.02, 1.02)
+    ax1.set_xticks(np.arange(0.0, 1.01, 0.10))
+    ax1.grid(alpha=0.28)
+    ax1.legend(fontsize=9.5, framealpha=0.92, prop=FONT_PROP)
 
     plt.tight_layout()
-    plt.savefig(out_path, dpi=220, bbox_inches='tight')
-    plt.close(fig)
+    plt.savefig(out_path.replace('.png', '_3_81.png'), dpi=220, bbox_inches='tight')
+    plt.close(fig1)
+
+    # 图 3.82: 误删轨迹次数
+    fig2, ax2 = plt.subplots(figsize=(6, 4.5))
+
+    for method in ['rule', 'global', 'full']:
+        sub = agg[agg['method'] == method].sort_values('severity')
+        x = sub['severity'].to_numpy()
+        y2 = sub['FalseDelete'].to_numpy()
+
+        if len(x) >= 3:
+            x_dense = np.linspace(x.min(), x.max(), 101)
+            y2_dense = np.interp(x_dense, x, y2)
+        else:
+            x_dense, y2_dense = x, y2
+
+        ax2.plot(x_dense, y2_dense, linewidth=2.2, label=name_map[method])
+        ax2.plot(x, y2, linestyle='None', marker='o', markersize=4.5)
+
+    ax2.set_title('图 3.82 地磁传感器检测能力下降程度与杂波强度对误删轨迹次数的影响', fontproperties=FONT_PROP)
+    ax2.set_xlabel('地磁传感器检测能力下降程度与杂波强度', fontproperties=FONT_PROP)
+    ax2.set_ylabel('误删轨迹次数 / 次', fontproperties=FONT_PROP)
+    ax2.set_xlim(-0.02, 1.02)
+    ax2.set_xticks(np.arange(0.0, 1.01, 0.10))
+    ax2.grid(alpha=0.28)
+    ax2.legend(fontsize=9.5, framealpha=0.92, prop=FONT_PROP)
+
+    plt.tight_layout()
+    plt.savefig(out_path.replace('.png', '_3_82.png'), dpi=220, bbox_inches='tight')
+    plt.close(fig2)
 
 # ---------------- experiment runner ----------------
 
@@ -820,7 +845,10 @@ def main():
     base_dir = 'E:/MyLunWen/xduts-main/code/chapter3/experiment1/exp1_results'
     os.makedirs(base_dir, exist_ok=True)
 
-    real_files = ['E:/MyLunWen/xduts-main/data/streamIn1215.txt', 'E:/MyLunWen/xduts-main/data/streamIn1216.txt']
+    real_files = [
+        'E:/MyLunWen/xduts-main/data/streamIn1215.txt',
+        'E:/MyLunWen/xduts-main/data/streamIn1216.txt',
+    ]
     bank = load_empirical_banks(real_files)
     pd.DataFrame([
         {'lane': lane, 'arrival_rate_per_sec': rate} for lane, rate in bank['arrival_rate_lane'].items()
@@ -880,10 +908,10 @@ def main():
     mm = pd.read_csv(os.path.join(base_dir, 'exp1_main_metrics.csv'))
     lines = []
     lines.append('# 实验一结果摘要\n')
-    lines.append('本实验用于验证第三章中节点自适应后验的正确性与稳定性，并考察其对在线跟踪性能的影响。\n')
+    lines.append('本实验用于验证第三章中地磁传感器自适应后验的正确性与稳定性，并考察其对在线跟踪性能的影响。\n')
     lines.append('## 主场景设置\n')
-    lines.append(f'- 仿真节点数：72 组、双车道；\n')
-    lines.append(f'- 代表性退化节点：lane={main_sim.rep_node[0]}, dev={main_sim.rep_node[1]}；\n')
+    lines.append(f'- 仿真地磁传感器数量：72 对、双车道；\n')
+    lines.append(f'- 代表性地磁传感器：lane={main_sim.rep_node[0]}, dev={main_sim.rep_node[1]}；\n')
     lines.append(f'- 退化区间：180s--390s；\n')
     lines.append(f'- 退化强度：0.70；\n')
     lines.append(f'- 使用真实数据样本对 geomPeak / timeLength 的分布范围及车流强度进行了粗对齐。\n')
@@ -894,13 +922,13 @@ def main():
         rule = mm[mm.method=='rule'].iloc[0]
         glob = mm[mm.method=='global'].iloc[0]
         full = mm[mm.method=='full'].iloc[0]
-        lines.append(f'- 在代表性退化节点上，完整方法的检测率估计误差较规则基线明显降低：pD MAE 从 {rule.pd_MAE_rep:.4f} 降至 {full.pd_MAE_rep:.4f}，pF MAE 从 {rule.pf_MAE_rep:.4f} 降至 {full.pf_MAE_rep:.4f}。\n')
-        lines.append(f'- 与去节点自适应方法相比，完整方法的 IDSW 从 {glob.IDSW:.0f} 降至 {full.IDSW:.0f}，FalseDelete 从 {glob.FalseDelete:.0f} 降至 {full.FalseDelete:.0f}。\n')
-        lines.append(f'- 创新方差与节点可靠性在完整方法下呈负相关，相关系数约为 {full.innovation_variance_reliability_corr:.3f}，说明将 R_b 绑定到 r_b 的设计是合理的。\n')
+        lines.append(f'- 在代表性地磁传感器上，完整方法的检测率估计误差较规则基线明显降低：pD MAE 从 {rule.pd_MAE_rep:.4f} 降至 {full.pd_MAE_rep:.4f}，pF MAE 从 {rule.pf_MAE_rep:.4f} 降至 {full.pf_MAE_rep:.4f}。\n')
+        lines.append(f'- 与地磁传感器固定参数后验相比，完整方法的 IDSW 从 {glob.IDSW:.0f} 降至 {full.IDSW:.0f}，FalseDelete 从 {glob.FalseDelete:.0f} 降至 {full.FalseDelete:.0f}。\n')
+        lines.append(f'- 创新方差与地磁传感器可靠性在完整方法下呈负相关，相关系数约为 {full.innovation_variance_reliability_corr:.3f}，说明将 R_b 绑定到 r_b 的设计是合理的。\n')
         sw = sweep_df.groupby(['method','severity'])[['IDSW','FalseDelete']].mean().reset_index()
         sev = sw[(sw.method=='full') & (sw.severity==0.75)].iloc[0]
         sev0 = sw[(sw.method=='full') & (sw.severity==0.0)].iloc[0]
-        lines.append(f'- 在退化强度从 0 增加到 0.75 的过程中，完整方法的平均 IDSW 由 {sev0.IDSW:.2f} 增长到 {sev.IDSW:.2f}，增长幅度显著小于规则基线，说明节点自适应后验在节点退化场景下能够有效抑制轨迹碎片化和身份切换。\n')
+        lines.append(f'- 在退化强度从 0 增加到 0.75 的过程中，完整方法的平均 IDSW 由 {sev0.IDSW:.2f} 增长到 {sev.IDSW:.2f}，增长幅度显著小于规则基线，说明地磁传感器自适应后验在地磁传感器检测能力变化场景下能够有效抑制轨迹碎片化和身份切换。\n')
     except Exception as e:
         lines.append(f'- 摘要自动生成时出现异常：{e}\n')
     with open(os.path.join(base_dir, 'exp1_results_summary.md'), 'w', encoding='utf-8') as f:
