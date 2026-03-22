@@ -7,8 +7,14 @@ matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 from matplotlib.colors import ListedColormap
 
-plt.rcParams['font.sans-serif'] = ['SimHei', 'DejaVu Sans']
+plt.rcParams['font.sans-serif'] = ['SimSun', 'SimHei', 'Microsoft YaHei']
 plt.rcParams['axes.unicode_minus'] = False
+plt.rcParams['font.size'] = 14
+plt.rcParams['axes.titlesize'] = 16
+plt.rcParams['axes.labelsize'] = 14
+plt.rcParams['legend.fontsize'] = 12
+plt.rcParams['xtick.labelsize'] = 12
+plt.rcParams['ytick.labelsize'] = 12
 
 mod = runpy.run_path('E:/MyLunWen/xduts-main/code/chapter3/experiment3/chapter3_experiments_345.py')
 simulate_scene_sequence = mod['simulate_scene_sequence']

@@ -765,8 +765,8 @@ def plot_degradation_impact(df: pd.DataFrame, out_path: str):
 
     name_map = {
         'rule': '规则基线方法',
-        'global': '全局统一后验方法',
-        'full': '节点自适应后验方法',
+        'global': '地磁传感器固定参数后验',
+        'full': '地磁传感器自适应后验',
     }
 
     plt.rcParams['font.sans-serif'] = ['SimHei', 'Microsoft YaHei', 'Noto Sans CJK SC', 'DejaVu Sans']
@@ -794,17 +794,17 @@ def plot_degradation_impact(df: pd.DataFrame, out_path: str):
         axes[1].plot(x_dense, y2_dense, linewidth=2.2, label=name_map[method])
         axes[1].plot(x, y2, linestyle='None', marker='o', markersize=4.5)
 
-    axes[0].set_title('节点退化强度对身份切换次数的影响')
-    axes[0].set_xlabel('节点退化强度系数')
+    axes[0].set_title('地磁传感器检测能力下降程度与杂波强度对身份切换次数的影响')
+    axes[0].set_xlabel('地磁传感器检测能力下降程度与杂波强度')
     axes[0].set_ylabel('身份切换次数 / 次')
     axes[0].set_xlim(-0.02, 1.02)
     axes[0].set_xticks(np.arange(0.0, 1.01, 0.10))
     axes[0].grid(alpha=0.28)
     axes[0].legend(fontsize=9.5, framealpha=0.92)
 
-    axes[1].set_title('节点退化强度对误删轨次数的影响')
-    axes[1].set_xlabel('节点退化强度系数')
-    axes[1].set_ylabel('误删轨次数 / 次')
+    axes[1].set_title('地磁传感器检测能力下降程度与杂波强度对误删轨迹次数的影响')
+    axes[1].set_xlabel('地磁传感器检测能力下降程度与杂波强度')
+    axes[1].set_ylabel('误删轨迹次数 / 次')
     axes[1].set_xlim(-0.02, 1.02)
     axes[1].set_xticks(np.arange(0.0, 1.01, 0.10))
     axes[1].grid(alpha=0.28)

@@ -13,21 +13,21 @@ OUTDIR.mkdir(exist_ok=True)
 # Matplotlib setup
 # -----------------------------
 font_candidates = [
+    "SimSun",
     "SimHei",
     "Microsoft YaHei",
-    "DejaVu Sans",
 ]
 available = {f.name for f in fm.fontManager.ttflist}
 chosen_font = next((f for f in font_candidates if f in available), "DejaVu Sans")
 
 plt.rcParams.update({
     "font.family": chosen_font,
-    "font.size": 10,
-    "axes.titlesize": 11,
-    "axes.labelsize": 10,
-    "legend.fontsize": 9,
-    "xtick.labelsize": 9,
-    "ytick.labelsize": 9,
+    "font.size": 14,
+    "axes.titlesize": 16,
+    "axes.labelsize": 14,
+    "legend.fontsize": 12,
+    "xtick.labelsize": 12,
+    "ytick.labelsize": 12,
     "axes.unicode_minus": False,
     "figure.dpi": 120,
     "savefig.dpi": 400,
@@ -282,14 +282,14 @@ def plot_fig3_11_separate() -> None:
             color=METHOD_COLORS[method],
             label=method,
         )
-    ax1.set_title("图 3.11_1a  常规车流密度 - 轨迹连续性保持率")
+    ax1.set_title("常规车流密度 - 轨迹连续性保持率")
     ax1.set_xlabel("连续漏检个数")
     ax1.set_ylabel("轨迹连续性保持率")
     ax1.set_xticks(m)
     ax1.set_ylim(0, 1.02)
     ax1.grid(True, linestyle="--", linewidth=0.5, alpha=0.5)
     ax1.set_axisbelow(True)
-    ax1.legend(loc="upper right", frameon=True)
+    ax1.legend(loc="lower left", frameon=True)
 
     # 右图：低密度车流 - 连续性
     ax2 = axes1[1]
@@ -304,16 +304,16 @@ def plot_fig3_11_separate() -> None:
             color=METHOD_COLORS[method],
             label=method,
         )
-    ax2.set_title("图 3.11_1b  低密度车流 - 轨迹连续性保持率")
+    ax2.set_title("低密度车流 - 轨迹连续性保持率")
     ax2.set_xlabel("连续漏检个数")
     ax2.set_ylabel("轨迹连续性保持率")
     ax2.set_xticks(m)
     ax2.set_ylim(0, 1.02)
     ax2.grid(True, linestyle="--", linewidth=0.5, alpha=0.5)
     ax2.set_axisbelow(True)
-    ax2.legend(loc="upper right", frameon=True)
+    ax2.legend(loc="lower left", frameon=True)
 
-    fig1.suptitle("图 3.11_1  轨迹连续性保持率对比", y=0.98, fontsize=12)
+    fig1.suptitle("轨迹连续性保持率对比", y=0.98, fontsize=12)
     fig1.tight_layout(rect=[0, 0, 1, 0.96])
     save_multi(fig1, "fig3_11_1_continuity")
     plt.close(fig1)
@@ -334,14 +334,14 @@ def plot_fig3_11_separate() -> None:
             color=METHOD_COLORS[method],
             label=method,
         )
-    ax3.set_title("图 3.11_2a  常规车流密度 - 跨段 RMSE")
+    ax3.set_title("常规车流密度 - 跨段 RMSE")
     ax3.set_xlabel("连续漏检个数")
     ax3.set_ylabel("跨段 RMSE (m)")
     ax3.set_xticks(m)
     ax3.set_ylim(0, 35)
     ax3.grid(True, linestyle="--", linewidth=0.5, alpha=0.5)
     ax3.set_axisbelow(True)
-    ax3.legend(loc="upper right", frameon=True)
+    ax3.legend(loc="upper left", frameon=True)
 
     # 右图：低密度车流 - RMSE
     ax4 = axes2[1]
@@ -356,16 +356,16 @@ def plot_fig3_11_separate() -> None:
             color=METHOD_COLORS[method],
             label=method,
         )
-    ax4.set_title("图 3.11_2b  低密度车流 - 跨段 RMSE")
+    ax4.set_title("低密度车流 - 跨段 RMSE")
     ax4.set_xlabel("连续漏检个数")
     ax4.set_ylabel("跨段 RMSE (m)")
     ax4.set_xticks(m)
     ax4.set_ylim(0, 22)
     ax4.grid(True, linestyle="--", linewidth=0.5, alpha=0.5)
     ax4.set_axisbelow(True)
-    ax4.legend(loc="upper right", frameon=True)
+    ax4.legend(loc="upper left", frameon=True)
 
-    fig2.suptitle("图 3.11_2  跨段 RMSE 对比", y=0.98, fontsize=12)
+    fig2.suptitle("跨段 RMSE 对比", y=0.98, fontsize=12)
     fig2.tight_layout(rect=[0, 0, 1, 0.96])
     save_multi(fig2, "fig3_11_2_rmse")
     plt.close(fig2)

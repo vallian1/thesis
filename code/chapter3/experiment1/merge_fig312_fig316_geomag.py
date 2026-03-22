@@ -17,17 +17,14 @@ import matplotlib.pyplot as plt
 # -------------------------------------------------------------------
 
 def set_chinese_font():
-    # 容器中可用字体优先级
-    candidates = [
-        "AR PL UMing CN",
-        "Noto Sans CJK JP",
-        "Noto Serif CJK JP",
-        "SimHei",
-        "Microsoft YaHei",
-        "DejaVu Sans",
-    ]
-    plt.rcParams["font.sans-serif"] = candidates
+    plt.rcParams["font.sans-serif"] = ["SimSun", "SimHei", "Microsoft YaHei"]
     plt.rcParams["axes.unicode_minus"] = False
+    plt.rcParams["font.size"] = 16
+    plt.rcParams["axes.titlesize"] = 18
+    plt.rcParams["axes.labelsize"] = 16
+    plt.rcParams["legend.fontsize"] = 14
+    plt.rcParams["xtick.labelsize"] = 14
+    plt.rcParams["ytick.labelsize"] = 14
 
 def build_data():
     # ΔT 扫描（原脚本扫描点来自 chapter3_experiments_345.py）
@@ -85,51 +82,52 @@ def save_data_csv(data, out_csv):
 def plot_merged_figure(data, out_png, out_pdf=None):
     set_chinese_font()
 
-    fig, axes = plt.subplots(1, 2, figsize=(13.6, 5.1))
+    # fig, axes = plt.subplots(1, 2, figsize=(13.6, 5.1))
+    fig, ax = plt.subplots(figsize=(6.8, 5.1))
 
-    # ---------------- (a) ΔT 扫描 ----------------
-    ax = axes[0]
-    ax_r = ax.twinx()
+    # # ---------------- (a) ΔT 扫描 ----------------
+    # ax = axes[0]
+    # ax_r = ax.twinx()
 
-    # l1, = ax.plot(
+    # # l1, = ax.plot(
+    # #     data["delta_t_s"],
+    # #     data["same_vehicle_ratio"],
+    # #     marker="o",
+    # #     linewidth=2,
+    # #     label="相邻地磁传感器同车触发比例",
+    # # )
+    # l2, = ax.plot(
     #     data["delta_t_s"],
-    #     data["same_vehicle_ratio"],
-    #     marker="o",
+    #     data["tracking_accuracy"],
+    #     marker="s",
     #     linewidth=2,
-    #     label="相邻地磁传感器同车触发比例",
+    #     color='#2ca02c',
+    #     label="跟踪准确率",
     # )
-    l2, = ax.plot(
-        data["delta_t_s"],
-        data["tracking_accuracy"],
-        marker="s",
-        linewidth=2,
-        color='#2ca02c',
-        label="跟踪准确率",
-    )
-    l3, = ax_r.plot(
-        data["delta_t_s"],
-        data["avg_output_delay_s"],
-        marker="^",
-        linewidth=2,
-        linestyle="--",
-        color='#ff7f0e',
-        label="平均输出时延",
-    )
+    # l3, = ax_r.plot(
+    #     data["delta_t_s"],
+    #     data["avg_output_delay_s"],
+    #     marker="^",
+    #     linewidth=2,
+    #     linestyle="--",
+    #     color='#ff7f0e',
+    #     label="平均输出时延",
+    # )
 
-    ax.set_title("ΔT 扫描：时间组织收益与时延")
-    ax.set_xlabel("时间片长度 ΔT / s")
-    ax.set_ylabel("比例 / 准确率")
-    ax_r.set_ylabel("平均输出时延 / s")
-    ax.set_ylim(-0.02, 1.00)
-    ax_r.set_ylim(0.0, 0.85)
-    ax.grid(alpha=0.30)
+    # ax.set_title("ΔT 扫描：时间组织收益与时延")
+    # ax.set_xlabel("时间片长度 ΔT / s")
+    # ax.set_ylabel("比例 / 准确率")
+    # ax_r.set_ylabel("平均输出时延 / s")
+    # ax.set_ylim(-0.02, 1.00)
+    # ax_r.set_ylim(0.0, 0.85)
+    # ax.grid(alpha=0.30)
 
-    lines = [l2, l3]
-    ax.legend(lines, [ln.get_label() for ln in lines], loc="upper left", fontsize=9)
+    # lines = [l2, l3]
+    # ax.legend(lines, [ln.get_label() for ln in lines], loc="upper left", fontsize=18)
 
     # ---------------- (b) L 扫描 ----------------
-    ax = axes[1]
-    ax_r = ax.twinx()
+    # ax = axes[1]
+    # ax_r = ax.twinx()
 
     l4, = ax.plot(
         data["lag_window_L"],
@@ -160,26 +158,26 @@ def plot_merged_figure(data, out_png, out_pdf=None):
         xy=(4, 0.7064),
         xytext=(3.15, 0.55),
         arrowprops=dict(arrowstyle="->", linewidth=1.2, zorder=10),
-        fontsize=9.5,
+        fontsize=14,
         zorder=10,
     )
 
     ax.set_title("L 扫描：回放收益与缓冲开销")
     ax.set_xlabel("固定滞后窗口长度 L")
     ax.set_ylabel("比例")
-        # ax_r.set_ylabel("平均缓冲事件数")
-    ax_r.set_ylabel("")
-    ax_r.set_yticks([])
+    # ax_r.set_ylabel("平均缓冲事件数")
+    # ax_r.set_ylabel("")
+    # ax_r.set_yticks([])
     ax.set_ylim(0.25, 0.82)
-    ax_r.set_ylim(0.8, 15.5)
+    # ax_r.set_ylim(0.8, 15.5)
     ax.set_xticks(data["lag_window_L"])
     ax.grid(alpha=0.30)
 
     # lines = [l4, l5, l6]
     lines = [l4, l5]
-    ax.legend(lines, [ln.get_label() for ln in lines], loc="lower right", fontsize=9)
+    ax.legend(lines, [ln.get_label() for ln in lines], loc="lower right", fontsize=14)
 
-    fig.suptitle("时间组织参数与固定滞后窗口的收益—开销折中", fontsize=14, y=1.02)
+    # fig.suptitle("时间组织参数与固定滞后窗口的收益—开销折中", fontsize=28, y=1.02)
     fig.tight_layout()
 
     fig.savefig(out_png, dpi=300, bbox_inches="tight")

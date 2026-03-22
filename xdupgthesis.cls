@@ -1958,9 +1958,9 @@
               { \l__xdu_cover_author_info_dim }
               { \l__xdu_supv_ii_str \enskip \l__xdu_supv_ii_t_str }
           }
-        \__xdu_cover_ii:nnnn { 9em } { 企业导师姓名、职称 }
-          { \l__xdu_cover_author_info_dim }
-          { \l__xdu_supv_ent_str \enskip \l__xdu_supv_ent_t_str }
+        %\__xdu_cover_ii:nnnn { 9em } { 企业导师姓名、职称 }
+        %  { \l__xdu_cover_author_info_dim }
+         % { \l__xdu_supv_ent_str \enskip \l__xdu_supv_ent_t_str }
       }
       {
         \__xdu_cover_ii:nnnn { 9em } { 指导教师姓名、职称 }
@@ -2005,8 +2005,8 @@
             \__xdu_str_max_dim:Nn \l__xdu_zh_title_page_info_dim
               { 学校导师姓名、职称：\l__xdu_supv_ii_str \enskip \l__xdu_supv_ii_t_str }
           }
-        \__xdu_str_max_dim:Nn \l__xdu_zh_title_page_info_dim
-          { 企业导师姓名、职称：\l__xdu_supv_ent_str \enskip \l__xdu_supv_ent_t_str }
+        %\__xdu_str_max_dim:Nn \l__xdu_zh_title_page_info_dim
+         % { 企业导师姓名、职称：\l__xdu_supv_ent_str \enskip \l__xdu_supv_ent_t_str }
       }
       {
         \__xdu_str_max_dim:Nn \l__xdu_zh_title_page_info_dim
@@ -2054,9 +2054,9 @@
                 \phantom { 学校导师姓名、职称： }
                 \l__xdu_supv_ii_str \enskip \l__xdu_supv_ii_t_str
               }
-            \par
-            { \bfseries 企业导师姓名、职称： }
-            \l__xdu_supv_ent_str \enskip \l__xdu_supv_ent_t_str
+            %\par
+            %{ \bfseries 企业导师姓名、职称： }
+            %\l__xdu_supv_ent_str \enskip \l__xdu_supv_ent_t_str
           }
           {
             \par

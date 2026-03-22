@@ -30,6 +30,14 @@ def plot_fig_4_2_typical_case() -> None:
         ("reconstructed", "本文重构结果"),
     ]
 
+    plt.rcParams["font.sans-serif"] = ["SimSun", "SimHei"]
+    plt.rcParams["font.size"] = 24.2
+    plt.rcParams["axes.titlesize"] = 28.6
+    plt.rcParams["axes.labelsize"] = 24.2
+    plt.rcParams["legend.fontsize"] = 22
+    plt.rcParams["xtick.labelsize"] = 22
+    plt.rcParams["ytick.labelsize"] = 22
+
     fig, axes = plt.subplots(3, 1, figsize=(12.5, 8.8), sharex=True)
     color_cycle = plt.cm.tab10(np.linspace(0, 1, 10))
 
@@ -53,6 +61,14 @@ def plot_fig_4_2_typical_case() -> None:
 def plot_fig_4_3_length_distribution() -> None:
     frag_lengths, recon_lengths = generate_length_distribution()
     bins = np.arange(0, 68, 2)
+
+    plt.rcParams["font.sans-serif"] = ["SimSun", "SimHei"]
+    plt.rcParams["font.size"] = 24.2
+    plt.rcParams["axes.titlesize"] = 28.6
+    plt.rcParams["axes.labelsize"] = 24.2
+    plt.rcParams["legend.fontsize"] = 22
+    plt.rcParams["xtick.labelsize"] = 22
+    plt.rcParams["ytick.labelsize"] = 22
 
     fig, ax = plt.subplots(figsize=(10.4, 5.8))
     ax.hist(frag_lengths, bins=bins, density=True, alpha=0.65, label="上游输出轨迹长度")
